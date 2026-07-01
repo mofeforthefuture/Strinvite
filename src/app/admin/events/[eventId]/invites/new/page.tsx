@@ -1,5 +1,6 @@
 import { createInvite } from "./actions";
 import Link from "next/link";
+import { SubmitButton } from "./SubmitButton";
 
 export default async function NewInvitePage({
   params,
@@ -77,12 +78,7 @@ export default async function NewInvitePage({
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
-          <button
-            formAction={createInvite}
-            className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-          >
-            Generate invite link
-          </button>
+          <SubmitButton action={createInvite} />
         </form>
       </div>
     </main>

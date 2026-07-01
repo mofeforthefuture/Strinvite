@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { toggleScanning, deactivateInvite } from "./actions";
 import DeleteEventButton from "./DeleteEventButton";
+import CopyButton from "./CopyButton";
 
 export default async function EventDetailPage({
   params,
@@ -135,9 +136,12 @@ export default async function EventDetailPage({
                         <p className="font-medium text-gray-900 truncate">
                           {invite.label || "Invite link"}
                         </p>
-                        <p className="mt-0.5 text-xs text-gray-500 truncate">
-                          {siteUrl}/rsvp/{invite.slug}
-                        </p>
+                        <div className="mt-0.5 flex items-center gap-2">
+                          <p className="text-xs text-gray-500 truncate">
+                            {siteUrl}/rsvp/{invite.slug}
+                          </p>
+                          <CopyButton text={`${siteUrl}/rsvp/${invite.slug}`} />
+                        </div>
                         <div className="mt-1 flex gap-3 text-xs text-gray-500">
                           <span>
                             {used} / {invite.max_guests} guests
