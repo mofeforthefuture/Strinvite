@@ -15,7 +15,7 @@ export default async function RsvpPage({
 
   const { data: invite } = await supabase
     .from("invites")
-    .select("id, label, max_guests, expires_at, is_active, events(name, event_date, venue)")
+    .select("id, label, note, max_guests, expires_at, is_active, events(name, tagline, event_date, venue)")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -47,6 +47,7 @@ export default async function RsvpPage({
 
   const event = invite.events as unknown as {
     name: string;
+    tagline: string | null;
     event_date: string | null;
     venue: string | null;
   } | null;
@@ -55,6 +56,11 @@ export default async function RsvpPage({
     <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-white p-6">
       <div className="mx-auto max-w-lg">
         <div className="mb-8 text-center">
+          {event?.tagline && (
+            <p className="mb-2 text-lg font-semibold text-indigo-600">
+              {event.tagline}
+            </p>
+          )}
           <h1 className="text-3xl font-bold text-gray-900">
             {event?.name ?? "You're invited"}
           </h1>
@@ -65,8 +71,10 @@ export default async function RsvpPage({
               {event.event_date && new Date(event.event_date).toLocaleString()}
             </p>
           )}
-          {invite.label && (
-            <p className="mt-1 text-sm text-indigo-600 font-medium">{invite.label}</p>
+          {invite.note && (
+            <p className="mt-2 rounded-lg bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700">
+              {invite.note}
+            </p>
           )}
           <p className="mt-2 text-sm text-gray-500">
             {remaining} spot{remaining === 1 ? "" : "s"} remaining

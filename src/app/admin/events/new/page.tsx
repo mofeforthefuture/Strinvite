@@ -1,5 +1,6 @@
 import { createEvent } from "./actions";
 import Link from "next/link";
+import ActionButton from "@/components/ActionButton";
 
 export default async function NewEventPage({
   searchParams,
@@ -38,6 +39,20 @@ export default async function NewEventPage({
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
+              RSVP headline (optional)
+            </label>
+            <input
+              name="tagline"
+              type="text"
+              placeholder="e.g. RSVP for E&M Imogu 30th Anniversary"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Shown at the top of the RSVP page before the form.
+            </p>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
               Date & time
             </label>
             <input
@@ -56,12 +71,9 @@ export default async function NewEventPage({
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
-          <button
-            formAction={createEvent}
-            className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-          >
+          <ActionButton action={createEvent} className="w-full" loadingText="Creating event" style="dots">
             Create event
-          </button>
+          </ActionButton>
         </form>
       </div>
     </main>

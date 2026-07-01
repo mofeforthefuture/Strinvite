@@ -13,7 +13,17 @@ export async function signIn(formData: FormData) {
 
   if (error) redirect(`/login?error=${encodeURIComponent(error.message)}`);
 
-  redirect("/admin/events");
+  // Check if user owns any events — if so, go to admin; otherwise dashboard
+  const { data: ownedEvents } = await supabase
+    .from("events")
+    .select("id")
+    .limit(1);
+
+  if (ownedEvents && ownedEvents.length > 0) {
+    redirect("/admin/events");
+  }
+
+  redirect("/dashboard");
 }
 
 export async function signOut() {

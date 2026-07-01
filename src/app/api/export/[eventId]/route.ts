@@ -20,10 +20,26 @@ export async function GET(
     .from("events")
     .select("name")
     .eq("id", eventId)
-    .eq("admin_id", user.id)
     .single();
 
   if (!event) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Check if user is the admin or a staff member
+  const { data: isOwner } = await supabase
+    .from("events")
+    .select("id")
+    .eq("id", eventId)
+    .eq("admin_id", user.id)
+    .maybeSingle();
+
+  const { data: isStaff } = await supabase
+    .from("event_staff")
+    .select("id")
+    .eq("event_id", eventId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!isOwner && !isStaff) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   // One row per ticket (per person)
   const { data: tickets } = await supabase

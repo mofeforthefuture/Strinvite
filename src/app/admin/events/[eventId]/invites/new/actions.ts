@@ -8,6 +8,7 @@ export async function createInvite(formData: FormData) {
   const supabase = await createClient();
   const eventId = formData.get("eventId") as string;
   const label = formData.get("label") as string;
+  const note = formData.get("note") as string;
   const max_guests = parseInt(formData.get("max_guests") as string, 10);
   const expires_at = formData.get("expires_at") as string;
 
@@ -30,6 +31,7 @@ export async function createInvite(formData: FormData) {
     const { error } = await supabase.from("invites").insert({
       event_id: eventId,
       label: label || null,
+      note: note || null,
       max_guests,
       expires_at,
       slug,

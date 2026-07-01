@@ -12,6 +12,7 @@ export async function createEvent(formData: FormData) {
   if (!user) redirect("/login");
 
   const name = formData.get("name") as string;
+  const tagline = formData.get("tagline") as string;
   const event_date = formData.get("event_date") as string;
   const venue = formData.get("venue") as string;
 
@@ -19,6 +20,7 @@ export async function createEvent(formData: FormData) {
     .from("events")
     .insert({
       name,
+      tagline: tagline || null,
       event_date: event_date || null,
       venue: venue || null,
       admin_id: user.id,

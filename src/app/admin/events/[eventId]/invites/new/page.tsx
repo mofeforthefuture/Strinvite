@@ -68,6 +68,20 @@ export default async function NewInvitePage({
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
+              Note for guests (optional)
+            </label>
+            <input
+              name="note"
+              type="text"
+              placeholder="e.g. Couples only, VIP access"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              This will be shown on the RSVP page.
+            </p>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
               Invite expires at *
             </label>
             <input

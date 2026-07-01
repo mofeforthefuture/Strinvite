@@ -7,6 +7,7 @@
 create table if not exists events (
   id              uuid primary key default gen_random_uuid(),
   name            text not null,
+  tagline         text,
   event_date      timestamptz,
   venue           text,
   scanning_enabled boolean not null default true,
@@ -21,11 +22,37 @@ create policy "owners can manage their events"
   using (admin_id = auth.uid())
   with check (admin_id = auth.uid());
 
+-- Event staff (sub-admins: can scan + view RSVPs, but cannot manage events/invites)
+create table if not exists event_staff (
+  id          uuid primary key default gen_random_uuid(),
+  event_id    uuid not null references events on delete cascade,
+  user_id     uuid not null references auth.users on delete cascade,
+  email       text not null,
+  created_at  timestamptz not null default now(),
+  unique (event_id, user_id)
+);
+
+alter table event_staff enable row level security;
+
+create policy "owners can manage staff"
+  on event_staff for all
+  using (
+    event_id in (select id from events where admin_id = auth.uid())
+  )
+  with check (
+    event_id in (select id from events where admin_id = auth.uid())
+  );
+
+create policy "staff can read own assignments"
+  on event_staff for select
+  using (user_id = auth.uid());
+
 -- Invites
 create table if not exists invites (
   id          uuid primary key default gen_random_uuid(),
   event_id    uuid not null references events on delete cascade,
   label       text,
+  note        text,
   max_guests  integer not null check (max_guests > 0),
   expires_at  timestamptz not null,
   slug        text unique not null,
@@ -71,11 +98,12 @@ create policy "public can create rsvps"
   on rsvps for insert
   with check (true);
 
--- Only authenticated users (admins / ushers) can read or update rsvps
+-- Admins and staff can read rsvps for their events
 create policy "authenticated users can read rsvps"
   on rsvps for select
   using (auth.role() = 'authenticated');
 
+-- Admins and staff can update rsvps (check-in)
 create policy "authenticated users can update rsvps"
   on rsvps for update
   using (auth.role() = 'authenticated')

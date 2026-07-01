@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { signOut } from "@/app/login/actions";
+import ActionButton from "@/components/ActionButton";
 
 export default async function EventsPage() {
   const supabase = await createClient();
@@ -29,12 +30,9 @@ export default async function EventsPage() {
               + New event
             </Link>
             <form>
-              <button
-                formAction={signOut}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-              >
+              <ActionButton action={signOut} variant="outline" loadingText="Signing out" style="dots">
                 Sign out
-              </button>
+              </ActionButton>
             </form>
           </div>
         </div>

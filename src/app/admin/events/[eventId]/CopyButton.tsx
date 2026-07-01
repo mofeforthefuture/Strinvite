@@ -2,11 +2,21 @@
 
 import { useState } from "react";
 
-export default function CopyButton({ text }: { text: string }) {
+export default function CopyButton({
+  tagline,
+  link,
+}: {
+  tagline?: string | null;
+  link: string;
+}) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(text);
+    const parts: string[] = [];
+    if (tagline) parts.push(tagline);
+    parts.push("Expiring soon");
+    parts.push(link);
+    await navigator.clipboard.writeText(parts.join("\n"));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

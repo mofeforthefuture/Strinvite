@@ -7,7 +7,6 @@ import { redirect } from "next/navigation";
 export async function submitRsvp(formData: FormData) {
   const slug = formData.get("slug") as string;
   const lead_name = formData.get("lead_name") as string;
-  const email = (formData.get("email") as string) || null;
   const phone = (formData.get("phone") as string) || null;
   const party_size = parseInt(formData.get("party_size") as string, 10);
 
@@ -57,7 +56,6 @@ export async function submitRsvp(formData: FormData) {
       .insert({
         invite_id: invite.id,
         lead_name: lead_name.trim(),
-        email,
         phone,
         party_size,
         guest_names,

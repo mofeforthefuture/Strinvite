@@ -1,6 +1,38 @@
 "use client";
 
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
+
+function RsvpSubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="group relative w-full overflow-hidden rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-indigo-700 disabled:cursor-not-allowed"
+    >
+      {pending ? (
+        <span className="inline-flex items-center gap-2">
+          <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          Securing your spot
+          <span className="inline-flex gap-0.5">
+            <span className="animate-bounce [animation-delay:0ms] h-1.5 w-1.5 rounded-full bg-white" />
+            <span className="animate-bounce [animation-delay:150ms] h-1.5 w-1.5 rounded-full bg-white" />
+            <span className="animate-bounce [animation-delay:300ms] h-1.5 w-1.5 rounded-full bg-white" />
+          </span>
+        </span>
+      ) : (
+        <span className="inline-flex items-center gap-1">
+          Confirm RSVP
+          <span className="transition-transform group-hover:translate-x-1">→</span>
+        </span>
+      )}
+    </button>
+  );
+}
 
 type Props = {
   slug: string;
@@ -23,17 +55,6 @@ export default function RsvpForm({ slug, maxGuests, submitAction }: Props) {
           name="lead_name"
           type="text"
           required
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </div>
-
-      <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">
-          Email (optional)
-        </label>
-        <input
-          name="email"
-          type="email"
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
@@ -87,12 +108,7 @@ export default function RsvpForm({ slug, maxGuests, submitAction }: Props) {
         </div>
       )}
 
-      <button
-        type="submit"
-        className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700"
-      >
-        Confirm RSVP →
-      </button>
+      <RsvpSubmitButton />
     </form>
   );
 }
