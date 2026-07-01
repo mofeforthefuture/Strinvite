@@ -159,6 +159,8 @@ export default async function EventDetailPage({
                           </p>
                           <CopyButton
                             tagline={event.tagline}
+                            venue={event.venue}
+                            eventDate={event.event_date}
                             link={`${siteUrl}/rsvp/${invite.slug}`}
                           />
                         </div>
