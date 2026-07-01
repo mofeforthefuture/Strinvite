@@ -4,9 +4,13 @@ import { useState } from "react";
 
 export default function CopyButton({
   tagline,
+  venue,
+  eventDate,
   link,
 }: {
   tagline?: string | null;
+  venue?: string | null;
+  eventDate?: string | null;
   link: string;
 }) {
   const [copied, setCopied] = useState(false);
@@ -14,6 +18,10 @@ export default function CopyButton({
   const handleCopy = async () => {
     const parts: string[] = [];
     if (tagline) parts.push(tagline);
+    const details: string[] = [];
+    if (venue) details.push(venue);
+    if (eventDate) details.push(new Date(eventDate).toLocaleString());
+    if (details.length) parts.push(details.join(" · "));
     parts.push("Expiring soon");
     parts.push(link);
     await navigator.clipboard.writeText(parts.join("\n"));

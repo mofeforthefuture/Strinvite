@@ -22,12 +22,6 @@ create policy "owners can manage their events"
   using (admin_id = auth.uid())
   with check (admin_id = auth.uid());
 
-create policy "staff can read assigned events"
-  on events for select
-  using (
-    id in (select event_id from event_staff where user_id = auth.uid())
-  );
-
 -- Event staff (sub-admins: can scan + view RSVPs, but cannot manage events/invites)
 create table if not exists event_staff (
   id          uuid primary key default gen_random_uuid(),
@@ -40,15 +34,41 @@ create table if not exists event_staff (
 
 alter table event_staff enable row level security;
 
+-- Helper functions (SECURITY DEFINER) to break RLS recursion between events <-> event_staff
+create or replace function is_event_owner(ev_id uuid)
+returns boolean
+language sql
+security definer
+stable
+as $$
+  select exists (
+    select 1 from events where id = ev_id and admin_id = auth.uid()
+  );
+$$;
+
+create or replace function is_event_staff(ev_id uuid)
+returns boolean
+language sql
+security definer
+stable
+as $$
+  select exists (
+    select 1 from event_staff where event_id = ev_id and user_id = auth.uid()
+  );
+$$;
+
+-- Staff can read events they are assigned to
+create policy "staff can read assigned events"
+  on events for select
+  using (is_event_staff(id));
+
+-- Owners can manage staff via the helper function (no recursion)
 create policy "owners can manage staff"
   on event_staff for all
-  using (
-    event_id in (select id from events where admin_id = auth.uid())
-  )
-  with check (
-    event_id in (select id from events where admin_id = auth.uid())
-  );
+  using (is_event_owner(event_id))
+  with check (is_event_owner(event_id));
 
+-- Staff can read their own assignments
 create policy "staff can read own assignments"
   on event_staff for select
   using (user_id = auth.uid());
