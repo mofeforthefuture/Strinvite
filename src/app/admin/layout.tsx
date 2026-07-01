@@ -13,5 +13,7 @@ export default async function AdminLayout({
 
   if (!user) redirect("/login");
 
+  if (user.email !== "admin@strinvite.com") redirect("/dashboard");
+
   return <>{children}</>;
 }

@@ -13,13 +13,11 @@ export async function signIn(formData: FormData) {
 
   if (error) redirect(`/login?error=${encodeURIComponent(error.message)}`);
 
-  // Check if user owns any events — if so, go to admin; otherwise dashboard
-  const { data: ownedEvents } = await supabase
-    .from("events")
-    .select("id")
-    .limit(1);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (ownedEvents && ownedEvents.length > 0) {
+  if (user?.email === "admin@strinvite.com") {
     redirect("/admin/events");
   }
 
