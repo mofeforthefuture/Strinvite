@@ -72,7 +72,7 @@ export default function QRScanner({ eventId }: Props) {
       {!scanning && !result && (
         <button
           onClick={startScanner}
-          className="rounded-xl bg-gray-900 px-8 py-4 text-lg font-semibold text-white hover:bg-gray-700"
+          className="rounded-xl bg-indigo-600 px-8 py-4 text-lg font-semibold text-white hover:bg-indigo-500 transition-colors"
         >
           Start camera
         </button>
@@ -85,19 +85,21 @@ export default function QRScanner({ eventId }: Props) {
 
       {result && (
         <div
-          className={`w-full max-w-sm rounded-2xl p-6 text-center shadow-lg ${
-            result.ok ? "bg-green-500 text-white" : "bg-red-500 text-white"
+          className={`w-full max-w-sm rounded-2xl p-6 text-center shadow-2xl ring-1 ${
+            result.ok
+              ? "bg-emerald-500/10 text-emerald-400 ring-emerald-500/20"
+              : "bg-red-500/10 text-red-400 ring-red-500/20"
           }`}
         >
           {result.ok ? (
             <>
               <p className="text-4xl font-bold">✓</p>
-              <p className="mt-2 text-xl font-semibold">{result.lead_name}</p>
-              <p className="mt-1 text-lg">
+              <p className="mt-2 text-xl font-semibold text-emerald-300">{result.lead_name}</p>
+              <p className="mt-1 text-lg text-emerald-400">
                 Party of {result.party_size}
               </p>
               {result.guest_names.length > 0 && (
-                <p className="mt-1 text-sm opacity-80">
+                <p className="mt-1 text-sm text-emerald-500">
                   {result.guest_names.join(", ")}
                 </p>
               )}
@@ -105,14 +107,14 @@ export default function QRScanner({ eventId }: Props) {
           ) : (
             <>
               <p className="text-4xl font-bold">✗</p>
-              <p className="mt-2 text-lg font-semibold">
+              <p className="mt-2 text-lg font-semibold text-red-300">
                 {reasonLabel[result.reason] ?? "Error"}
               </p>
             </>
           )}
           <button
             onClick={resetAndScan}
-            className="mt-4 rounded-lg bg-white/20 px-4 py-2 text-sm font-medium hover:bg-white/30"
+            className="mt-4 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/20 transition-colors"
           >
             Scan next
           </button>

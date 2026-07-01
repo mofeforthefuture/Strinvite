@@ -22,6 +22,12 @@ create policy "owners can manage their events"
   using (admin_id = auth.uid())
   with check (admin_id = auth.uid());
 
+create policy "staff can read assigned events"
+  on events for select
+  using (
+    id in (select event_id from event_staff where user_id = auth.uid())
+  );
+
 -- Event staff (sub-admins: can scan + view RSVPs, but cannot manage events/invites)
 create table if not exists event_staff (
   id          uuid primary key default gen_random_uuid(),

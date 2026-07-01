@@ -8,7 +8,7 @@ export function SubmitButton({ action }: { action: (formData: FormData) => void 
     <button
       formAction={action}
       disabled={pending}
-      className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed"
+      className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-indigo-500 disabled:bg-indigo-800 disabled:cursor-not-allowed"
     >
       {pending ? (
         <>

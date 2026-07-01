@@ -8,17 +8,17 @@ export default async function LoginPage({
   const params = await searchParams;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm space-y-6 rounded-2xl bg-white p-8 shadow-md">
-        <h1 className="text-2xl font-bold text-gray-900">Sign in</h1>
+    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
+      <div className="w-full max-w-md space-y-8 rounded-2xl bg-slate-900 p-10 shadow-2xl ring-1 ring-slate-800">
+        <h1 className="text-3xl font-bold text-slate-100">Sign in</h1>
 
         {params.error && (
-          <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
+          <p className="rounded-lg bg-red-500/10 px-4 py-2 text-sm text-red-400 ring-1 ring-red-500/20">
             {params.error}
           </p>
         )}
         {params.message && (
-          <p className="rounded-lg bg-green-50 px-4 py-2 text-sm text-green-700">
+          <p className="rounded-lg bg-emerald-500/10 px-4 py-2 text-sm text-emerald-400 ring-1 ring-emerald-500/20">
             {params.message}
           </p>
         )}

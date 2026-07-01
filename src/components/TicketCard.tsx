@@ -28,7 +28,7 @@ export default function TicketCard({
     QRCode.toCanvas(canvasRef.current, confirmationCode, {
       width: 200,
       margin: 1,
-      color: { dark: "#111827", light: "#ffffff" },
+      color: { dark: "#0f172a", light: "#ffffff" },
     });
   }, [confirmationCode]);
 
@@ -48,14 +48,13 @@ export default function TicketCard({
 
   return (
     <div className="flex flex-col items-center gap-3">
-      {/* The capturable ticket */}
       <div
         ref={cardRef}
-        className="w-64 overflow-hidden rounded-2xl bg-white shadow-lg"
+        className="w-64 overflow-hidden rounded-2xl bg-slate-900 shadow-2xl ring-1 ring-slate-700"
         style={{ fontFamily: "sans-serif" }}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3 text-white">
+        <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3 text-white">
           <p className="text-[10px] font-semibold uppercase tracking-widest opacity-75">
             Event ticket
           </p>
@@ -69,26 +68,25 @@ export default function TicketCard({
           )}
         </div>
 
-        {/* Body */}
-        <div className="flex flex-col items-center gap-2 px-4 py-4">
+        {/* Body — keep white for QR scanability */}
+        <div className="flex flex-col items-center gap-2 bg-white px-4 py-4">
           <canvas ref={canvasRef} className="rounded-lg" />
-          <p className="text-center text-sm font-bold text-gray-900">{name}</p>
+          <p className="text-center text-sm font-bold text-slate-900">{name}</p>
           <p className="font-mono text-xs font-bold tracking-widest text-indigo-600">
             {confirmationCode}
           </p>
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-50 px-4 py-2 text-center text-[10px] text-gray-400">
+        <div className="px-4 py-2 text-center text-[10px] text-slate-500">
           Single-use · Do not share
         </div>
       </div>
 
-      {/* Download button — outside the captured area */}
       <button
         onClick={handleDownload}
         disabled={downloading}
-        className="flex items-center gap-1.5 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+        className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-slate-300 ring-1 ring-slate-700 hover:bg-slate-800 hover:text-slate-100 disabled:opacity-50 transition-colors"
       >
         {downloading ? "Saving…" : "⬇ Download ticket"}
       </button>

@@ -29,18 +29,18 @@ type Props = {
 
 const variantClasses: Record<string, string> = {
   primary:
-    "rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:bg-indigo-400",
+    "rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:bg-indigo-800",
   danger:
-    "rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:bg-red-400",
+    "rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:bg-red-800",
   outline:
-    "rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:text-gray-400",
+    "rounded-lg px-4 py-2 text-sm font-medium text-slate-300 ring-1 ring-slate-700 hover:bg-slate-800 disabled:text-slate-600",
   ghost:
-    "rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-100 disabled:text-gray-400",
+    "rounded-lg px-4 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800 disabled:text-slate-600",
   success:
-    "rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:bg-green-400",
+    "rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:bg-emerald-800",
   warning:
-    "rounded-lg bg-yellow-100 text-yellow-800 px-4 py-2 text-sm font-medium hover:bg-yellow-200 disabled:opacity-60",
-  "link-danger": "text-xs text-red-500 hover:underline disabled:opacity-40",
+    "rounded-lg bg-yellow-500/10 text-yellow-400 px-4 py-2 text-sm font-medium hover:bg-yellow-500/20 disabled:opacity-60",
+  "link-danger": "text-xs text-red-400 hover:text-red-300 hover:underline disabled:opacity-40",
 };
 
 export default function ActionButton({

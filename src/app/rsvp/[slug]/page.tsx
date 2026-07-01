@@ -32,7 +32,6 @@ export default async function RsvpPage({
     );
   }
 
-  // Check remaining capacity
   const { data: existing } = await supabase
     .from("rsvps")
     .select("party_size")
@@ -53,36 +52,36 @@ export default async function RsvpPage({
   } | null;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-white p-6">
+    <main className="min-h-screen bg-slate-950 p-6">
       <div className="mx-auto max-w-lg">
         <div className="mb-8 text-center">
           {event?.tagline && (
-            <p className="mb-2 text-lg font-semibold text-indigo-600">
+            <p className="mb-2 text-lg font-semibold text-indigo-400">
               {event.tagline}
             </p>
           )}
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-slate-100">
             {event?.name ?? "You're invited"}
           </h1>
           {(event?.event_date || event?.venue) && (
-            <p className="mt-1 text-gray-500">
+            <p className="mt-1 text-slate-400">
               {event.venue && `${event.venue}`}
               {event.event_date && event.venue && " · "}
               {event.event_date && new Date(event.event_date).toLocaleString()}
             </p>
           )}
           {invite.note && (
-            <p className="mt-2 rounded-lg bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700">
+            <p className="mt-3 rounded-lg bg-indigo-500/10 px-4 py-2 text-sm font-medium text-indigo-300 ring-1 ring-indigo-500/20">
               {invite.note}
             </p>
           )}
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-3 text-sm text-slate-500">
             {remaining} spot{remaining === 1 ? "" : "s"} remaining
           </p>
         </div>
 
         {sp.error && (
-          <p className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+          <p className="mb-4 rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-400 ring-1 ring-red-500/20">
             {sp.error}
           </p>
         )}
@@ -95,10 +94,10 @@ export default async function RsvpPage({
 
 function ErrorScreen({ message }: { message: string }) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 p-6">
-      <div className="rounded-2xl bg-white p-10 text-center shadow-md">
+    <main className="flex min-h-screen items-center justify-center bg-slate-950 p-6">
+      <div className="rounded-2xl bg-slate-900 p-10 text-center ring-1 ring-slate-800 shadow-2xl">
         <p className="text-2xl">🚫</p>
-        <p className="mt-3 text-lg font-medium text-gray-900">{message}</p>
+        <p className="mt-3 text-lg font-medium text-slate-200">{message}</p>
       </div>
     </main>
   );
