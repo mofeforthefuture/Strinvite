@@ -9,7 +9,7 @@ function RsvpSubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="group relative w-full overflow-hidden rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-indigo-500 disabled:cursor-not-allowed"
+      className="group relative w-full overflow-hidden rounded-lg bg-[#C5A55A] px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-[#B8953F] disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending ? (
         <span className="inline-flex items-center gap-2">
@@ -27,7 +27,7 @@ function RsvpSubmitButton() {
       ) : (
         <span className="inline-flex items-center gap-1">
           Confirm RSVP
-          <span className="transition-transform group-hover:translate-x-1">→</span>
+          <span className="transition-transform group-hover:translate-x-1">&rarr;</span>
         </span>
       )}
     </button>
@@ -44,42 +44,42 @@ export default function RsvpForm({ slug, maxGuests, submitAction }: Props) {
   const [partySize, setPartySize] = useState(1);
 
   return (
-    <form action={submitAction} className="space-y-4 rounded-2xl bg-slate-900 p-6 ring-1 ring-slate-800 shadow-2xl">
+    <form action={submitAction} className="space-y-4 rounded-2xl border-2 border-[#C5A55A]/20 bg-white p-6 shadow-lg">
       <input type="hidden" name="slug" value={slug} />
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-300">
+        <label className="mb-1 block text-sm font-medium text-[#5C4D3C]">
           Your name *
         </label>
         <input
           name="lead_name"
           type="text"
           required
-          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className="w-full rounded-lg border border-[#C5A55A]/30 bg-[#FFFDF7] px-3 py-2 text-sm text-[#2D2417] placeholder-[#C5A55A]/40 focus:outline-none focus:ring-2 focus:ring-[#C5A55A]/50 focus:border-transparent"
         />
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-300">
+        <label className="mb-1 block text-sm font-medium text-[#5C4D3C]">
           Phone (optional)
         </label>
         <input
           name="phone"
           type="tel"
-          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className="w-full rounded-lg border border-[#C5A55A]/30 bg-[#FFFDF7] px-3 py-2 text-sm text-[#2D2417] placeholder-[#C5A55A]/40 focus:outline-none focus:ring-2 focus:ring-[#C5A55A]/50 focus:border-transparent"
         />
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-300">
+        <label className="mb-1 block text-sm font-medium text-[#5C4D3C]">
           Party size *{" "}
-          <span className="font-normal text-slate-500">(max {maxGuests})</span>
+          <span className="font-normal text-[#8B7355]">(max {maxGuests})</span>
         </label>
         <select
           name="party_size"
           value={partySize}
           onChange={(e) => setPartySize(Number(e.target.value))}
-          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className="w-full rounded-lg border border-[#C5A55A]/30 bg-[#FFFDF7] px-3 py-2 text-sm text-[#2D2417] focus:outline-none focus:ring-2 focus:ring-[#C5A55A]/50 focus:border-transparent"
         >
           {Array.from({ length: maxGuests }, (_, i) => i + 1).map((n) => (
             <option key={n} value={n}>
@@ -91,9 +91,9 @@ export default function RsvpForm({ slug, maxGuests, submitAction }: Props) {
 
       {partySize > 1 && (
         <div className="space-y-2">
-          <p className="text-sm font-medium text-slate-300">
+          <p className="text-sm font-medium text-[#5C4D3C]">
             Guest names{" "}
-            <span className="font-normal text-slate-500">— each person gets their own ticket</span>
+            <span className="font-normal text-[#8B7355]">-- each person gets their own ticket</span>
           </p>
           {Array.from({ length: partySize - 1 }, (_, i) => (
             <input
@@ -102,7 +102,7 @@ export default function RsvpForm({ slug, maxGuests, submitAction }: Props) {
               type="text"
               required
               placeholder={`Guest ${i + 2} full name`}
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full rounded-lg border border-[#C5A55A]/30 bg-[#FFFDF7] px-3 py-2 text-sm text-[#2D2417] placeholder-[#C5A55A]/40 focus:outline-none focus:ring-2 focus:ring-[#C5A55A]/50 focus:border-transparent"
             />
           ))}
         </div>

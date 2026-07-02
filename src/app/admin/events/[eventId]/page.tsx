@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { toggleScanning, deactivateInvite, addStaff, removeStaff } from "./actions";
+import { toggleScanning, deactivateInvite, addStaff, removeStaff, createStaffAccount } from "./actions";
 import DeleteEventButton from "./DeleteEventButton";
 import CopyButton from "./CopyButton";
 import ActionButton from "@/components/ActionButton";
@@ -161,16 +161,18 @@ export default async function EventDetailPage({
                             tagline={event.tagline}
                             venue={event.venue}
                             eventDate={event.event_date}
+                            expiresAt={invite.expires_at}
                             link={`${siteUrl}/rsvp/${invite.slug}`}
                           />
                         </div>
-                        <div className="mt-1 flex gap-3 text-xs text-slate-500">
+                        <div className="mt-1 flex flex-wrap gap-3 text-xs text-slate-500">
                           <span>
                             {used} / {invite.max_guests} guests
                           </span>
                           <span>
-                            Expires{" "}
-                            {new Date(invite.expires_at).toLocaleString()}
+                            {expired
+                              ? `Expired ${new Date(invite.expires_at).toLocaleDateString()}`
+                              : `Expires ${new Date(invite.expires_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}`}
                           </span>
                         </div>
                       </div>
@@ -216,23 +218,65 @@ export default async function EventDetailPage({
         {/* Staff */}
         <div>
           <h2 className="mb-3 text-lg font-semibold text-slate-100">Staff</h2>
-          <div className="rounded-xl bg-slate-900 p-5 ring-1 ring-slate-800 space-y-4">
+          <div className="rounded-xl bg-slate-900 p-5 ring-1 ring-slate-800 space-y-5">
             <p className="text-sm text-slate-400">
               Staff members can scan tickets and view/download RSVP lists for this event.
             </p>
-            <form className="flex gap-2">
-              <input type="hidden" name="eventId" value={eventId} />
-              <input
-                name="email"
-                type="email"
-                required
-                placeholder="Staff member's email"
-                className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-              <ActionButton action={addStaff} loadingText="Adding" style="dots">
-                Add
-              </ActionButton>
-            </form>
+
+            {/* Create new staff account */}
+            <div className="rounded-lg bg-slate-800/50 p-4 ring-1 ring-slate-700">
+              <p className="mb-3 text-sm font-medium text-slate-200">Create staff account</p>
+              <p className="mb-3 text-xs text-slate-500">
+                Create an account for a new staff member. They can log in with the email and password you set.
+              </p>
+              <form className="space-y-2">
+                <input type="hidden" name="eventId" value={eventId} />
+                <input
+                  name="name"
+                  type="text"
+                  required
+                  placeholder="Full name"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="Email address"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                <input
+                  name="password"
+                  type="text"
+                  required
+                  minLength={6}
+                  placeholder="Login password (min 6 characters)"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                <ActionButton action={createStaffAccount} loadingText="Creating" style="dots">
+                  Create &amp; add to event
+                </ActionButton>
+              </form>
+            </div>
+
+            {/* Add existing user as staff */}
+            <div>
+              <p className="mb-2 text-xs text-slate-500">Or add an existing account by email:</p>
+              <form className="flex gap-2">
+                <input type="hidden" name="eventId" value={eventId} />
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="Existing user's email"
+                  className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                <ActionButton action={addStaff} loadingText="Adding" style="dots">
+                  Add
+                </ActionButton>
+              </form>
+            </div>
+
             {(staff ?? []).length > 0 && (
               <ul className="divide-y divide-slate-800">
                 {(staff ?? []).map((s) => (

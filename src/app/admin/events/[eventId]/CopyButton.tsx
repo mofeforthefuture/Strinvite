@@ -6,11 +6,13 @@ export default function CopyButton({
   tagline,
   venue,
   eventDate,
+  expiresAt,
   link,
 }: {
   tagline?: string | null;
   venue?: string | null;
   eventDate?: string | null;
+  expiresAt?: string | null;
   link: string;
 }) {
   const [copied, setCopied] = useState(false);
@@ -20,9 +22,35 @@ export default function CopyButton({
     if (tagline) parts.push(tagline);
     const details: string[] = [];
     if (venue) details.push(venue);
-    if (eventDate) details.push(new Date(eventDate).toLocaleString());
-    if (details.length) parts.push(details.join(" · "));
-    parts.push("Expiring soon");
+    if (eventDate) {
+      details.push(
+        new Date(eventDate).toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+      );
+    }
+    if (details.length) parts.push(details.join(" - "));
+    if (expiresAt) {
+      const expiry = new Date(expiresAt);
+      const now = new Date();
+      const diffMs = expiry.getTime() - now.getTime();
+      if (diffMs <= 0) {
+        parts.push("Link expired");
+      } else {
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        if (diffDays > 0) {
+          parts.push(`RSVP closes in ${diffDays} day${diffDays === 1 ? "" : "s"}`);
+        } else if (diffHours > 0) {
+          parts.push(`RSVP closes in ${diffHours} hour${diffHours === 1 ? "" : "s"}`);
+        } else {
+          parts.push("RSVP closing very soon");
+        }
+      }
+    }
     parts.push(link);
     await navigator.clipboard.writeText(parts.join("\n"));
     setCopied(true);

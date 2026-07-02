@@ -69,3 +69,68 @@ export async function removeStaff(formData: FormData) {
   await supabase.from("event_staff").delete().eq("id", staffId);
   revalidatePath(`/admin/events/${eventId}`);
 }
+
+export async function createStaffAccount(formData: FormData) {
+  const supabase = await createClient();
+  const serviceClient = createServiceClient();
+  const eventId = formData.get("eventId") as string;
+  const name = (formData.get("name") as string).trim();
+  const email = (formData.get("email") as string).trim().toLowerCase();
+  const password = formData.get("password") as string;
+
+  if (!name || !email || !password) {
+    redirect(
+      `/admin/events/${eventId}?error=${encodeURIComponent("Name, email, and password are required.")}`
+    );
+  }
+
+  if (password.length < 6) {
+    redirect(
+      `/admin/events/${eventId}?error=${encodeURIComponent("Password must be at least 6 characters.")}`
+    );
+  }
+
+  // Check if user already exists
+  const { data: userList } = await serviceClient.auth.admin.listUsers();
+  const existingUser = userList?.users?.find((u) => u.email === email);
+
+  let userId: string;
+
+  if (existingUser) {
+    userId = existingUser.id;
+  } else {
+    // Create the user account via admin API (no email confirmation needed)
+    const { data: newUser, error: createError } =
+      await serviceClient.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: name },
+      });
+
+    if (createError || !newUser?.user) {
+      redirect(
+        `/admin/events/${eventId}?error=${encodeURIComponent(createError?.message ?? "Failed to create account.")}`
+      );
+    }
+
+    userId = newUser.user.id;
+  }
+
+  // Add as event staff
+  const { error } = await supabase.from("event_staff").insert({
+    event_id: eventId,
+    user_id: userId,
+    email,
+  });
+
+  if (error?.code === "23505") {
+    // Already added — ignore
+  } else if (error) {
+    redirect(
+      `/admin/events/${eventId}?error=${encodeURIComponent(error.message)}`
+    );
+  }
+
+  revalidatePath(`/admin/events/${eventId}`);
+}
