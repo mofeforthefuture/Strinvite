@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og";
 import { createClient } from "@/lib/supabase/server";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 export const alt = "Event Invitation";
 export const size = { width: 1200, height: 630 };
@@ -15,9 +17,7 @@ export default async function OGImage({
 
   const { data: invite } = await supabase
     .from("invites")
-    .select(
-      "label, events(name, tagline, event_date, venue)"
-    )
+    .select("label, events(name, tagline, event_date, venue)")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -40,6 +40,11 @@ export default async function OGImage({
       })
     : "";
 
+  // Read the invitation logo from the public directory
+  const logoPath = join(process.cwd(), "public", "invitation-logo.png");
+  const logoData = await readFile(logoPath);
+  const logoBase64 = `data:image/png;base64,${logoData.toString("base64")}`;
+
   return new ImageResponse(
     (
       <div
@@ -47,10 +52,11 @@ export default async function OGImage({
           width: "100%",
           height: "100%",
           display: "flex",
-          flexDirection: "column",
+          flexDirection: "row",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #FFFDF7 0%, #FFF9E6 50%, #FFFDF7 100%)",
+          background:
+            "linear-gradient(135deg, #FFFDF7 0%, #FFF9E6 50%, #FFFDF7 100%)",
           fontFamily: "serif",
           position: "relative",
         }}
@@ -81,25 +87,47 @@ export default async function OGImage({
           }}
         />
 
-        {/* Content */}
+        {/* Logo side */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 420,
+            height: "100%",
+            paddingLeft: 60,
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={logoBase64}
+            alt="Event logo"
+            width={300}
+            height={300}
+            style={{ objectFit: "contain" }}
+          />
+        </div>
+
+        {/* Event details side */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            padding: "60px 80px",
+            flex: 1,
+            padding: "50px 60px 50px 20px",
             textAlign: "center",
           }}
         >
           {/* Small decorative text */}
           <div
             style={{
-              fontSize: 20,
+              fontSize: 16,
               color: "#C5A55A",
-              letterSpacing: "6px",
+              letterSpacing: "5px",
               textTransform: "uppercase",
-              marginBottom: 16,
+              marginBottom: 14,
             }}
           >
             You are cordially invited
@@ -108,10 +136,11 @@ export default async function OGImage({
           {/* Decorative line */}
           <div
             style={{
-              width: 120,
+              width: 100,
               height: 2,
-              background: "linear-gradient(90deg, transparent, #C5A55A, transparent)",
-              marginBottom: 24,
+              background:
+                "linear-gradient(90deg, transparent, #C5A55A, transparent)",
+              marginBottom: 20,
               display: "flex",
             }}
           />
@@ -119,12 +148,12 @@ export default async function OGImage({
           {/* Event name */}
           <div
             style={{
-              fontSize: 52,
+              fontSize: 40,
               fontWeight: 700,
               color: "#2D2417",
               lineHeight: 1.2,
-              marginBottom: tagline ? 12 : 20,
-              maxWidth: 900,
+              marginBottom: tagline ? 10 : 16,
+              maxWidth: 550,
             }}
           >
             {eventName}
@@ -134,10 +163,10 @@ export default async function OGImage({
           {tagline && (
             <div
               style={{
-                fontSize: 26,
+                fontSize: 22,
                 color: "#C5A55A",
                 fontStyle: "italic",
-                marginBottom: 20,
+                marginBottom: 16,
               }}
             >
               {tagline}
@@ -147,10 +176,11 @@ export default async function OGImage({
           {/* Decorative line */}
           <div
             style={{
-              width: 80,
+              width: 60,
               height: 2,
-              background: "linear-gradient(90deg, transparent, #C5A55A, transparent)",
-              marginBottom: 24,
+              background:
+                "linear-gradient(90deg, transparent, #C5A55A, transparent)",
+              marginBottom: 18,
               display: "flex",
             }}
           />
@@ -161,40 +191,33 @@ export default async function OGImage({
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: 8,
+              gap: 6,
             }}
           >
             {eventDate && (
               <div
                 style={{
-                  fontSize: 22,
+                  fontSize: 18,
                   color: "#5C4D3C",
-                  letterSpacing: "2px",
+                  letterSpacing: "1px",
                 }}
               >
                 {eventDate}
               </div>
             )}
             {venue && (
-              <div
-                style={{
-                  fontSize: 20,
-                  color: "#8B7355",
-                }}
-              >
-                {venue}
-              </div>
+              <div style={{ fontSize: 17, color: "#8B7355" }}>{venue}</div>
             )}
           </div>
 
           {/* RSVP badge */}
           <div
             style={{
-              marginTop: 32,
-              padding: "10px 40px",
+              marginTop: 26,
+              padding: "8px 36px",
               border: "2px solid #C5A55A",
               borderRadius: 40,
-              fontSize: 18,
+              fontSize: 15,
               color: "#C5A55A",
               letterSpacing: "4px",
               textTransform: "uppercase",
