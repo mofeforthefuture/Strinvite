@@ -61,18 +61,7 @@ export default function RsvpForm({ slug, maxGuests, submitAction }: Props) {
 
       <div>
         <label className="mb-1 block text-sm font-medium text-[#5C4D3C]">
-          Phone (optional)
-        </label>
-        <input
-          name="phone"
-          type="tel"
-          className="w-full rounded-lg border border-[#C5A55A]/30 bg-[#FFFDF7] px-3 py-2 text-sm text-[#2D2417] placeholder-[#C5A55A]/40 focus:outline-none focus:ring-2 focus:ring-[#C5A55A]/50 focus:border-transparent"
-        />
-      </div>
-
-      <div>
-        <label className="mb-1 block text-sm font-medium text-[#5C4D3C]">
-          Party size *{" "}
+          RSVP limit *{" "}
           <span className="font-normal text-[#8B7355]">(max {maxGuests})</span>
         </label>
         <select

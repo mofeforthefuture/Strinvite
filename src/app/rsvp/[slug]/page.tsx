@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { submitRsvp } from "./actions";
 import RsvpForm from "./RsvpForm";
 import type { Metadata } from "next";
+import Image from "next/image";
 
 export async function generateMetadata({
   params,
@@ -131,6 +132,16 @@ export default async function RsvpPage({
       <div className="mx-auto max-w-lg">
         {/* Invitation header card */}
         <div className="mb-6 rounded-2xl border-2 border-[#C5A55A]/30 bg-white p-8 text-center shadow-lg">
+          {/* Invitation logo */}
+          <Image
+            src="/invitation-logo.png"
+            alt="Event logo"
+            width={160}
+            height={160}
+            className="mx-auto mb-4"
+            priority
+          />
+
           {/* Decorative top element */}
           <div className="mx-auto mb-4 flex items-center justify-center gap-3">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#C5A55A]" />
@@ -177,7 +188,7 @@ export default async function RsvpPage({
           )}
 
           <p className="mt-4 text-xs font-medium text-[#C5A55A]">
-            {remaining} spot{remaining === 1 ? "" : "s"} remaining
+            Limited seats available
           </p>
         </div>
 
