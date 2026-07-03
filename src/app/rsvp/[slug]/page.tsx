@@ -28,7 +28,7 @@ export async function generateMetadata({
     dress_color: string | null;
   } | null;
 
-  const eventName = event?.name ?? "You're Invited";
+  const eventName = event?.name ?? "E&M Imogu 30th Anniversary";
   const tagline = event?.tagline ?? "";
   const details: string[] = [];
   if (event?.venue) details.push(event.venue);
@@ -47,7 +47,7 @@ export async function generateMetadata({
     ? `${tagline}${details.length ? " | " + details.join(" - ") : ""}`
     : details.length
     ? `Join us! ${details.join(" - ")}`
-    : "You're invited to a special event. RSVP now to confirm your attendance.";
+    : "RSVP for E&M Imogu 30th Anniversary. Confirm your attendance now!";
 
   return {
     title: `${eventName} | RSVP`,
@@ -164,7 +164,7 @@ export default async function RsvpPage({
           )}
 
           <h1 className="text-3xl font-bold text-[#2D2417] sm:text-4xl" style={{ fontFamily: "Georgia, serif" }}>
-            {event?.name ?? "You're Invited"}
+            {event?.name ?? "E&M Imogu 30th Anniversary"}
           </h1>
 
           {/* Decorative divider */}

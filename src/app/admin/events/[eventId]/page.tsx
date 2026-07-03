@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { toggleScanning, deactivateInvite, addStaff, removeStaff, createStaffAccount } from "./actions";
+import { updateEvent, toggleScanning, deactivateInvite, addStaff, removeStaff, createStaffAccount } from "./actions";
 import DeleteEventButton from "./DeleteEventButton";
 import CopyButton from "./CopyButton";
 import ActionButton from "@/components/ActionButton";
@@ -90,6 +90,112 @@ export default async function EventDetailPage({
             {sp.error}
           </p>
         )}
+
+        {/* Edit event details */}
+        <div className="rounded-xl bg-slate-900 p-5 ring-1 ring-slate-800">
+          <h2 className="mb-4 text-lg font-semibold text-slate-100">Event details</h2>
+          <form className="space-y-4">
+            <input type="hidden" name="eventId" value={eventId} />
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-300">
+                Event name *
+              </label>
+              <input
+                name="name"
+                type="text"
+                required
+                defaultValue={event.name}
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-300">
+                RSVP headline
+              </label>
+              <input
+                name="tagline"
+                type="text"
+                defaultValue={event.tagline ?? ""}
+                placeholder="e.g. RSVP for E&M Imogu 30th Anniversary"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-300">
+                Date & time
+              </label>
+              <input
+                name="event_date"
+                type="datetime-local"
+                defaultValue={event.event_date ? new Date(event.event_date).toISOString().slice(0, 16) : ""}
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-300">
+                Venue
+              </label>
+              <input
+                name="venue"
+                type="text"
+                defaultValue={event.venue ?? ""}
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-300">
+                Contact phone number
+              </label>
+              <input
+                name="phone"
+                type="tel"
+                defaultValue={event.phone ?? ""}
+                placeholder="e.g. +1 (555) 123-4567"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                Guests can reach out to this number for enquiries.
+              </p>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-300">
+                Dress code
+              </label>
+              <select
+                name="dress_code"
+                defaultValue={event.dress_code ?? ""}
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              >
+                <option value="">-- Select dress code --</option>
+                <option value="Formal">Formal</option>
+                <option value="Semi-Formal">Semi-Formal</option>
+                <option value="Smart Casual">Smart Casual</option>
+                <option value="Casual">Casual</option>
+                <option value="Traditional">Traditional</option>
+                <option value="Black Tie">Black Tie</option>
+                <option value="Cocktail">Cocktail</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-300">
+                Dress color for guests
+              </label>
+              <input
+                name="dress_color"
+                type="text"
+                defaultValue={event.dress_color ?? ""}
+                placeholder="e.g. White, Yellow, Red and Black"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                The recommended color(s) guests should wear.
+              </p>
+            </div>
+            <ActionButton action={updateEvent} loadingText="Saving" style="dots">
+              Save changes
+            </ActionButton>
+          </form>
+        </div>
 
         {/* Scanning toggle */}
         <div className="flex items-center justify-between rounded-xl bg-slate-900 p-5 ring-1 ring-slate-800">
