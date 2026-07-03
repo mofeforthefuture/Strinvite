@@ -136,8 +136,8 @@ export default async function RsvpPage({
           <Image
             src="/invitation-logo.png"
             alt="Event logo"
-            width={160}
-            height={160}
+            width={240}
+            height={240}
             className="mx-auto mb-4"
             priority
           />

@@ -44,7 +44,7 @@ export default function RsvpForm({ slug, maxGuests, submitAction }: Props) {
   const [partySize, setPartySize] = useState(1);
 
   return (
-    <form action={submitAction} className="space-y-4 rounded-2xl border-2 border-[#C5A55A]/20 bg-white p-6 shadow-lg">
+    <form action={submitAction} className="space-y-4 rounded-2xl border-2 border-[#C5A55A]/20 bg-[#FFFDF7] p-6 shadow-lg">
       <input type="hidden" name="slug" value={slug} />
 
       <div>
@@ -55,7 +55,7 @@ export default function RsvpForm({ slug, maxGuests, submitAction }: Props) {
           name="lead_name"
           type="text"
           required
-          className="w-full rounded-lg border border-[#C5A55A]/30 bg-[#FFFDF7] px-3 py-2 text-sm text-[#2D2417] placeholder-[#C5A55A]/40 focus:outline-none focus:ring-2 focus:ring-[#C5A55A]/50 focus:border-transparent"
+          className="w-full rounded-lg border border-[#C5A55A]/30 bg-[#FFF8EC] px-3 py-2 text-sm text-[#2D2417] placeholder-[#C5A55A]/40 focus:outline-none focus:ring-2 focus:ring-[#C5A55A]/50 focus:border-transparent"
         />
       </div>
 
@@ -68,7 +68,7 @@ export default function RsvpForm({ slug, maxGuests, submitAction }: Props) {
           name="party_size"
           value={partySize}
           onChange={(e) => setPartySize(Number(e.target.value))}
-          className="w-full rounded-lg border border-[#C5A55A]/30 bg-[#FFFDF7] px-3 py-2 text-sm text-[#2D2417] focus:outline-none focus:ring-2 focus:ring-[#C5A55A]/50 focus:border-transparent"
+          className="w-full rounded-lg border border-[#C5A55A]/30 bg-[#FFF8EC] px-3 py-2 text-sm text-[#2D2417] focus:outline-none focus:ring-2 focus:ring-[#C5A55A]/50 focus:border-transparent"
         >
           {Array.from({ length: maxGuests }, (_, i) => i + 1).map((n) => (
             <option key={n} value={n}>
@@ -91,7 +91,7 @@ export default function RsvpForm({ slug, maxGuests, submitAction }: Props) {
               type="text"
               required
               placeholder={`Guest ${i + 2} full name`}
-              className="w-full rounded-lg border border-[#C5A55A]/30 bg-[#FFFDF7] px-3 py-2 text-sm text-[#2D2417] placeholder-[#C5A55A]/40 focus:outline-none focus:ring-2 focus:ring-[#C5A55A]/50 focus:border-transparent"
+              className="w-full rounded-lg border border-[#C5A55A]/30 bg-[#FFF8EC] px-3 py-2 text-sm text-[#2D2417] placeholder-[#C5A55A]/40 focus:outline-none focus:ring-2 focus:ring-[#C5A55A]/50 focus:border-transparent"
             />
           ))}
         </div>
