@@ -71,6 +71,52 @@ export default async function NewEventPage({
               className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
           </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-300">
+              Contact phone number
+            </label>
+            <input
+              name="phone"
+              type="tel"
+              placeholder="e.g. +1 (555) 123-4567"
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              Guests can reach out to this number for enquiries.
+            </p>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-300">
+              Dress code
+            </label>
+            <select
+              name="dress_code"
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            >
+              <option value="">-- Select dress code --</option>
+              <option value="Formal">Formal</option>
+              <option value="Semi-Formal">Semi-Formal</option>
+              <option value="Smart Casual">Smart Casual</option>
+              <option value="Casual">Casual</option>
+              <option value="Traditional">Traditional</option>
+              <option value="Black Tie">Black Tie</option>
+              <option value="Cocktail">Cocktail</option>
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-300">
+              Dress color for guests
+            </label>
+            <input
+              name="dress_color"
+              type="text"
+              placeholder="e.g. White, Yellow, Red and Black"
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              The recommended color(s) guests should wear.
+            </p>
+          </div>
           <ActionButton action={createEvent} className="w-full" loadingText="Creating event" style="dots">
             Create event
           </ActionButton>

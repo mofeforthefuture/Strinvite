@@ -10,6 +10,9 @@ create table if not exists events (
   tagline         text,
   event_date      timestamptz,
   venue           text,
+  phone           text,
+  dress_code      text,
+  dress_color     text,
   scanning_enabled boolean not null default true,
   admin_id        uuid not null references auth.users on delete cascade,
   created_at      timestamptz not null default now()

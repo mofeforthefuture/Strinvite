@@ -28,7 +28,7 @@ export default async function OGImage({
     venue: string | null;
   } | null;
 
-  const eventName = event?.name ?? "You're Invited";
+  const eventName = event?.name ?? "RSVP for E & M 30th anniversary";
   const tagline = event?.tagline ?? "";
   const venue = event?.venue ?? "";
   const eventDate = event?.event_date

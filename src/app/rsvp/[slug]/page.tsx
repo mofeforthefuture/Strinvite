@@ -14,7 +14,7 @@ export async function generateMetadata({
 
   const { data: invite } = await supabase
     .from("invites")
-    .select("label, events(name, tagline, event_date, venue)")
+    .select("label, events(name, tagline, event_date, venue, phone, dress_code, dress_color)")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -23,6 +23,9 @@ export async function generateMetadata({
     tagline: string | null;
     event_date: string | null;
     venue: string | null;
+    phone: string | null;
+    dress_code: string | null;
+    dress_color: string | null;
   } | null;
 
   const eventName = event?.name ?? "You're Invited";
@@ -75,7 +78,7 @@ export default async function RsvpPage({
 
   const { data: invite } = await supabase
     .from("invites")
-    .select("id, label, note, max_guests, expires_at, is_active, events(name, tagline, event_date, venue)")
+    .select("id, label, note, max_guests, expires_at, is_active, events(name, tagline, event_date, venue, phone, dress_code, dress_color)")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -109,6 +112,9 @@ export default async function RsvpPage({
     tagline: string | null;
     event_date: string | null;
     venue: string | null;
+    phone: string | null;
+    dress_code: string | null;
+    dress_color: string | null;
   } | null;
 
   const formattedDate = event?.event_date
@@ -181,14 +187,40 @@ export default async function RsvpPage({
             </div>
           )}
 
+          {/* Dress code & color */}
+          {(event?.dress_code || event?.dress_color) && (
+            <div className="mt-4 space-y-1 rounded-lg border border-[#C5A55A]/20 bg-[#FFFDF7] px-4 py-3">
+              {event.dress_code && (
+                <p className="text-sm font-medium text-[#5C4D3C]">
+                  Dress Code for Guests is <span className="text-[#C5A55A]">{event.dress_code}</span>
+                </p>
+              )}
+              {event.dress_color && (
+                <p className="text-sm font-medium text-[#5C4D3C]">
+                  Dress Color for Guests is <span className="text-[#C5A55A]">{event.dress_color}</span>
+                </p>
+              )}
+            </div>
+          )}
+
           {invite.note && (
             <p className="mt-4 rounded-lg border border-[#C5A55A]/20 bg-[#FFFDF7] px-4 py-2 text-sm font-medium text-[#8B7355]">
               {invite.note}
             </p>
           )}
 
-          <p className="mt-4 text-xs font-medium text-[#C5A55A]">
-            Limited seats available
+          {/* Contact phone */}
+          {event?.phone && (
+            <p className="mt-3 text-sm text-[#8B7355]">
+              For enquiries, call or text{" "}
+              <a href={`tel:${event.phone}`} className="font-semibold text-[#C5A55A] underline">
+                {event.phone}
+              </a>
+            </p>
+          )}
+
+          <p className="mt-4 text-sm font-semibold text-[#C5A55A]">
+            RSVP now to retain your seat, link expires in 7 days.
           </p>
         </div>
 

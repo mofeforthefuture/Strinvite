@@ -43,9 +43,9 @@ export default function CopyButton({
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
         const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         if (diffDays > 0) {
-          parts.push(`RSVP closes in ${diffDays} day${diffDays === 1 ? "" : "s"}`);
+          parts.push(`Link expires in ${diffDays} day${diffDays === 1 ? "" : "s"}`);
         } else if (diffHours > 0) {
-          parts.push(`RSVP closes in ${diffHours} hour${diffHours === 1 ? "" : "s"}`);
+          parts.push(`Link expires in ${diffHours} hour${diffHours === 1 ? "" : "s"}`);
         } else {
           parts.push("RSVP closing very soon");
         }
