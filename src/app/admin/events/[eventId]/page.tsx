@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { updateEvent, toggleScanning, deactivateInvite, addStaff, removeStaff, createStaffAccount } from "./actions";
+import { updateEvent, toggleScanning, deactivateInvite, reactivateInvite, addStaff, removeStaff, createStaffAccount } from "./actions";
 import DeleteEventButton from "./DeleteEventButton";
 import CopyButton from "./CopyButton";
 import ActionButton from "@/components/ActionButton";
@@ -298,7 +298,7 @@ export default async function EventDetailPage({
                             ? "Full"
                             : "Active"}
                         </span>
-                        {invite.is_active && (
+                        {invite.is_active ? (
                           <form>
                             <input type="hidden" name="inviteId" value={invite.id} />
                             <input type="hidden" name="eventId" value={eventId} />
@@ -309,6 +309,19 @@ export default async function EventDetailPage({
                               style="dots"
                             >
                               Deactivate
+                            </ActionButton>
+                          </form>
+                        ) : (
+                          <form>
+                            <input type="hidden" name="inviteId" value={invite.id} />
+                            <input type="hidden" name="eventId" value={eventId} />
+                            <ActionButton
+                              action={reactivateInvite}
+                              loadingText="Reactivating"
+                              style="dots"
+                              className="!text-emerald-400 hover:!text-emerald-300"
+                            >
+                              Reactivate
                             </ActionButton>
                           </form>
                         )}

@@ -10,9 +10,17 @@ export async function createInvite(formData: FormData) {
   const label = formData.get("label") as string;
   const note = formData.get("note") as string;
   const max_guests = parseInt(formData.get("max_guests") as string, 10);
-  const expires_at = formData.get("expires_at") as string;
+  const expiresIn = formData.get("expires_in") as string;
 
-  if (!eventId || !max_guests || !expires_at) {
+  let expires_at: string;
+  if (expiresIn === "never") {
+    expires_at = new Date("2099-12-31T23:59:59Z").toISOString();
+  } else {
+    const days = parseInt(expiresIn, 10) || 7;
+    expires_at = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+  }
+
+  if (!eventId || !max_guests) {
     redirect(`/admin/events/${eventId}/invites/new?error=Missing+required+fields`);
   }
 

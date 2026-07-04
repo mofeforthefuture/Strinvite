@@ -12,10 +12,6 @@ export default async function NewInvitePage({
   const { eventId } = await params;
   const sp = await searchParams;
 
-  const defaultExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 16);
-
   return (
     <main className="min-h-screen bg-slate-950 p-6">
       <div className="mx-auto max-w-lg">
@@ -35,7 +31,7 @@ export default async function NewInvitePage({
           </p>
         )}
 
-        <form className="space-y-4 rounded-xl bg-slate-900 p-6 ring-1 ring-slate-800">
+        <form action={createInvite} className="space-y-4 rounded-xl bg-slate-900 p-6 ring-1 ring-slate-800">
           <input type="hidden" name="eventId" value={eventId} />
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-300">
@@ -81,17 +77,20 @@ export default async function NewInvitePage({
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-300">
-              Invite expires at *
+              Invite expires in *
             </label>
-            <input
-              name="expires_at"
-              type="datetime-local"
+            <select
+              name="expires_in"
               required
-              defaultValue={defaultExpiry}
+              defaultValue="7"
               className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            />
+            >
+              <option value="3">3 days</option>
+              <option value="7">7 days</option>
+              <option value="never">No expiry</option>
+            </select>
           </div>
-          <SubmitButton action={createInvite} />
+          <SubmitButton />
         </form>
       </div>
     </main>
