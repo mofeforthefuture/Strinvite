@@ -68,6 +68,14 @@ export async function reactivateInvite(formData: FormData) {
   revalidatePath(`/admin/events/${eventId}`);
 }
 
+export async function deleteInvite(formData: FormData) {
+  const supabase = await createClient();
+  const inviteId = formData.get("inviteId") as string;
+  const eventId = formData.get("eventId") as string;
+  await supabase.from("invites").delete().eq("id", inviteId);
+  revalidatePath(`/admin/events/${eventId}`);
+}
+
 export async function addStaff(formData: FormData) {
   const supabase = await createClient();
   const serviceClient = createServiceClient();
