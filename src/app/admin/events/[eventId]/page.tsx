@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { updateEvent, toggleScanning, deactivateInvite, reactivateInvite, addStaff, removeStaff, createStaffAccount } from "./actions";
+import { updateEvent, toggleScanning, addStaff, removeStaff, createStaffAccount } from "./actions";
 import DeleteEventButton from "./DeleteEventButton";
-import CopyButton from "./CopyButton";
 import ActionButton from "@/components/ActionButton";
+import InvitesList from "./InvitesList";
 
 export default async function EventDetailPage({
   params,
@@ -43,6 +43,21 @@ export default async function EventDetailPage({
     (rsvpCounts ?? [])
       .filter((r) => r.invite_id === inviteId)
       .reduce((sum, r) => sum + r.party_size, 0);
+
+  const invitesWithStatus = (invites ?? []).map((invite) => {
+    const used = usedCapacity(invite.id);
+    const expired = new Date(invite.expires_at) < new Date();
+    const full = used >= invite.max_guests;
+    const dead = !invite.is_active || expired || full;
+    const status: "Active" | "Expired" | "Full" | "Deactivated" = !invite.is_active
+      ? "Deactivated"
+      : expired
+      ? "Expired"
+      : full
+      ? "Full"
+      : "Active";
+    return { ...invite, used, expired, full, dead, status };
+  });
 
   const { data: staff } = await supabase
     .from("event_staff")
@@ -237,101 +252,12 @@ export default async function EventDetailPage({
             </Link>
           </div>
 
-          {!invites?.length ? (
-            <div className="rounded-xl border border-dashed border-slate-700 p-8 text-center text-sm text-slate-500">
-              No invite links yet.
-            </div>
-          ) : (
-            <ul className="space-y-3">
-              {invites.map((invite) => {
-                const used = usedCapacity(invite.id);
-                const expired = new Date(invite.expires_at) < new Date();
-                const full = used >= invite.max_guests;
-                const dead = !invite.is_active || expired || full;
-
-                return (
-                  <li
-                    key={invite.id}
-                    className="rounded-xl bg-slate-900 p-4 ring-1 ring-slate-800"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <p className="font-medium text-slate-100 truncate">
-                          {invite.label || "Invite link"}
-                        </p>
-                        <div className="mt-0.5 flex items-center gap-2">
-                          <p className="text-xs text-slate-500 truncate">
-                            {siteUrl}/rsvp/{invite.slug}
-                          </p>
-                          <CopyButton
-                            tagline={event.tagline}
-                            venue={event.venue}
-                            eventDate={event.event_date}
-                            expiresAt={invite.expires_at}
-                            link={`${siteUrl}/rsvp/${invite.slug}`}
-                          />
-                        </div>
-                        <div className="mt-1 flex flex-wrap gap-3 text-xs text-slate-500">
-                          <span>
-                            {used} / {invite.max_guests} guests
-                          </span>
-                          <span>
-                            {expired
-                              ? `Expired ${new Date(invite.expires_at).toLocaleDateString()}`
-                              : `Expires ${new Date(invite.expires_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}`}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                            dead
-                              ? "bg-slate-800 text-slate-500"
-                              : "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20"
-                          }`}
-                        >
-                          {!invite.is_active
-                            ? "Deactivated"
-                            : expired
-                            ? "Expired"
-                            : full
-                            ? "Full"
-                            : "Active"}
-                        </span>
-                        {invite.is_active ? (
-                          <form>
-                            <input type="hidden" name="inviteId" value={invite.id} />
-                            <input type="hidden" name="eventId" value={eventId} />
-                            <ActionButton
-                              action={deactivateInvite}
-                              variant="link-danger"
-                              loadingText="Deactivating"
-                              style="dots"
-                            >
-                              Deactivate
-                            </ActionButton>
-                          </form>
-                        ) : (
-                          <form>
-                            <input type="hidden" name="inviteId" value={invite.id} />
-                            <input type="hidden" name="eventId" value={eventId} />
-                            <ActionButton
-                              action={reactivateInvite}
-                              loadingText="Reactivating"
-                              style="dots"
-                              className="!text-emerald-400 hover:!text-emerald-300"
-                            >
-                              Reactivate
-                            </ActionButton>
-                          </form>
-                        )}
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          <InvitesList
+            eventId={eventId}
+            siteUrl={siteUrl}
+            event={{ tagline: event.tagline, venue: event.venue, event_date: event.event_date }}
+            invites={invitesWithStatus}
+          />
         </div>
 
         {/* Staff */}
