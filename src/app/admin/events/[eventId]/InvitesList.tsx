@@ -24,6 +24,7 @@ export type InviteWithStatus = {
 };
 
 const FILTERS: Array<"All" | InviteStatus> = ["All", "Active", "Expired", "Full", "Deactivated"];
+const PAGE_SIZE = 8;
 
 export default function InvitesList({
   eventId,
@@ -38,6 +39,7 @@ export default function InvitesList({
 }) {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<(typeof FILTERS)[number]>("All");
+  const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -50,6 +52,13 @@ export default function InvitesList({
       return matchesQuery && matchesStatus;
     });
   }, [invites, query, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, currentPage]);
 
   if (!invites.length) {
     return (
@@ -65,7 +74,10 @@ export default function InvitesList({
         <input
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setPage(1);
+          }}
           placeholder="Search by label or link..."
           className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:max-w-xs"
         />
@@ -74,7 +86,10 @@ export default function InvitesList({
             <button
               key={f}
               type="button"
-              onClick={() => setStatusFilter(f)}
+              onClick={() => {
+                setStatusFilter(f);
+                setPage(1);
+              }}
               className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                 statusFilter === f
                   ? "bg-indigo-600 text-white"
@@ -93,7 +108,7 @@ export default function InvitesList({
         </div>
       ) : (
         <ul className="space-y-3">
-          {filtered.map((invite) => (
+          {paginated.map((invite) => (
             <li key={invite.id} className="rounded-xl bg-slate-900 p-4 ring-1 ring-slate-800">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
@@ -166,6 +181,30 @@ export default function InvitesList({
             </li>
           ))}
         </ul>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-1">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage <= 1}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-300 ring-1 ring-slate-700 hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent"
+          >
+            Previous
+          </button>
+          <span className="text-xs text-slate-500">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage >= totalPages}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-300 ring-1 ring-slate-700 hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent"
+          >
+            Next
+          </button>
+        </div>
       )}
     </div>
   );
