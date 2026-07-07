@@ -87,13 +87,6 @@ export default async function RsvpPage({
   }
 
   const expired = new Date(invite.expires_at) < new Date();
-  if (!invite.is_active || expired) {
-    return (
-      <ErrorScreen
-        message={expired ? "This invite has expired." : "This invite is no longer active."}
-      />
-    );
-  }
 
   const { data: existing } = await supabase
     .from("rsvps")
@@ -103,9 +96,13 @@ export default async function RsvpPage({
   const used = (existing ?? []).reduce((s, r) => s + r.party_size, 0);
   const remaining = invite.max_guests - used;
 
-  if (remaining <= 0) {
-    return <ErrorScreen message="This invite is fully booked." />;
-  }
+  const statusMessage = !invite.is_active
+    ? "This invite is no longer active."
+    : expired
+    ? "This invite has expired."
+    : remaining <= 0
+    ? "This invite is fully booked."
+    : null;
 
   const event = invite.events as unknown as {
     name: string;
@@ -219,18 +216,31 @@ export default async function RsvpPage({
             </p>
           )}
 
-          <p className="mt-4 text-sm font-semibold text-[#C5A55A]">
-            RSVP now to retain your seat, link expires in 7 days.
-          </p>
+          {!statusMessage && (
+            <p className="mt-4 text-sm font-semibold text-[#C5A55A]">
+              RSVP now to retain your seat, link expires in 7 days.
+            </p>
+          )}
         </div>
 
-        {sp.error && (
-          <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {sp.error}
-          </p>
-        )}
+        {statusMessage ? (
+          <div className="rounded-2xl border-2 border-[#C5A55A]/20 bg-white p-6 text-center shadow-lg">
+            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#C5A55A]/30">
+              <span className="text-base text-[#C5A55A]">!</span>
+            </div>
+            <p className="text-base font-medium text-[#2D2417]">{statusMessage}</p>
+          </div>
+        ) : (
+          <>
+            {sp.error && (
+              <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {sp.error}
+              </p>
+            )}
 
-        <RsvpForm slug={slug} maxGuests={remaining} submitAction={submitRsvp} />
+            <RsvpForm slug={slug} maxGuests={remaining} submitAction={submitRsvp} />
+          </>
+        )}
       </div>
     </main>
   );
