@@ -14,6 +14,38 @@ export default async function EventsPage() {
     .select("id, name, event_date, venue, scanning_enabled")
     .order("event_date", { ascending: true });
 
+  const eventIds = events?.map((e) => e.id) ?? [];
+
+  const { data: allInvites } = eventIds.length
+    ? await supabase
+        .from("invites")
+        .select("id, event_id")
+        .in("event_id", eventIds)
+    : { data: [] as { id: string; event_id: string }[] };
+
+  const inviteIds = allInvites?.map((i) => i.id) ?? [];
+
+  const { data: allRsvps } = inviteIds.length
+    ? await supabase
+        .from("rsvps")
+        .select("invite_id, party_size")
+        .in("invite_id", inviteIds)
+    : { data: [] as { invite_id: string; party_size: number }[] };
+
+  const inviteToEvent = new Map<string, string>();
+  for (const inv of allInvites ?? []) {
+    inviteToEvent.set(inv.id, inv.event_id);
+  }
+
+  const eventStats = new Map<string, { inviteCount: number; expectedGuests: number }>();
+  for (const e of events ?? []) {
+    const inviteCount = (allInvites ?? []).filter((i) => i.event_id === e.id).length;
+    const expectedGuests = (allRsvps ?? [])
+      .filter((r) => inviteToEvent.get(r.invite_id) === e.id)
+      .reduce((sum, r) => sum + r.party_size, 0);
+    eventStats.set(e.id, { inviteCount, expectedGuests });
+  }
+
   return (
     <main className="min-h-screen bg-slate-950 p-6">
       <div className="mx-auto max-w-3xl">
@@ -57,6 +89,16 @@ export default async function EventsPage() {
                         ? new Date(event.event_date).toLocaleString()
                         : "No date set"}
                     </p>
+                    {(() => {
+                      const stats = eventStats.get(event.id);
+                      return (
+                        <p className="mt-1 text-xs text-slate-500">
+                          {stats?.inviteCount ?? 0} invite{(stats?.inviteCount ?? 0) !== 1 ? "s" : ""} sent
+                          {" · "}
+                          {stats?.expectedGuests ?? 0} expected guest{(stats?.expectedGuests ?? 0) !== 1 ? "s" : ""}
+                        </p>
+                      );
+                    })()}
                   </div>
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-medium ${

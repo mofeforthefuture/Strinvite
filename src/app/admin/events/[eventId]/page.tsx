@@ -100,6 +100,20 @@ export default async function EventDetailPage({
           </div>
         </div>
 
+        {/* Stats overview */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl bg-slate-900 p-4 ring-1 ring-slate-800">
+            <p className="text-sm font-medium text-slate-400">Invites sent</p>
+            <p className="mt-1 text-2xl font-bold text-slate-100">{invitesWithStatus.length}</p>
+          </div>
+          <div className="rounded-xl bg-slate-900 p-4 ring-1 ring-slate-800">
+            <p className="text-sm font-medium text-slate-400">Expected guests</p>
+            <p className="mt-1 text-2xl font-bold text-slate-100">
+              {(rsvpCounts ?? []).reduce((sum, r) => sum + r.party_size, 0)}
+            </p>
+          </div>
+        </div>
+
         {sp.error && (
           <p className="rounded-lg bg-red-500/10 px-4 py-2 text-sm text-red-400 ring-1 ring-red-500/20">
             {sp.error}
