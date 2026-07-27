@@ -22,7 +22,7 @@ export default async function RsvpsPage({
   const { data: rsvps } = await supabase
     .from("rsvps")
     .select(
-      "id, lead_name, email, phone, party_size, confirmation_code, created_at, invites(label, slug), tickets(id, name, confirmation_code, checked_in, checked_in_at)"
+      "id, lead_name, email, phone, party_size, confirmation_code, created_at, invites!inner(label, slug), tickets(id, name, confirmation_code, checked_in, checked_in_at)"
     )
     .eq("invites.event_id", eventId)
     .order("created_at", { ascending: false });
