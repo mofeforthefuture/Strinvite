@@ -53,7 +53,7 @@ export default async function StaffRsvpsPage({
   return (
     <main className="min-h-screen bg-slate-950 p-6">
       <div className="mx-auto max-w-4xl">
-        <div className="mb-6 flex items-start justify-between">
+        <div className="mb-6 space-y-3">
           <div>
             <Link
               href="/dashboard"
@@ -61,7 +61,7 @@ export default async function StaffRsvpsPage({
             >
               ← Dashboard
             </Link>
-            <h1 className="mt-1 text-2xl font-bold text-slate-100">
+            <h1 className="mt-1 text-xl font-bold text-slate-100 sm:text-2xl">
               RSVPs — {event.name}
             </h1>
             <p className="text-sm text-slate-400">
@@ -69,7 +69,7 @@ export default async function StaffRsvpsPage({
               {rows.length} RSVPs
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <a
               href={`/api/export/${eventId}?filter=in`}
               className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors"
