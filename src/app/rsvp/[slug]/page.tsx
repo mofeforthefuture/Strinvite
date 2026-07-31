@@ -134,24 +134,24 @@ export default async function RsvpPage({
     <main className="min-h-screen bg-[#FFFDF7] p-4 sm:p-6">
       <div className="mx-auto max-w-lg">
         {/* Invitation header card */}
-        <div className="mb-6 rounded-2xl border-2 border-[#C5A55A]/30 bg-white p-8 text-center shadow-lg">
+        <div className="mb-6 rounded-2xl border-2 border-[#C5A55A]/30 bg-white px-5 py-6 text-center shadow-lg sm:p-8">
           {/* Invitation logo */}
           <Image
             src="/invitation-logo.png"
             alt="Event logo"
             width={240}
             height={240}
-            className="mx-auto mb-4"
+            className="mx-auto mb-4 h-auto w-40 sm:w-60"
             priority
           />
 
           {/* Decorative top element */}
-          <div className="mx-auto mb-4 flex items-center justify-center gap-3">
-            <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#C5A55A]" />
-            <span className="text-xs font-medium tracking-[0.3em] uppercase text-[#C5A55A]">
+          <div className="mx-auto mb-4 flex items-center justify-center gap-2 sm:gap-3">
+            <div className="h-px w-8 bg-gradient-to-r from-transparent to-[#C5A55A] sm:w-12" />
+            <span className="text-[10px] font-medium tracking-[0.3em] uppercase text-[#C5A55A] sm:text-xs">
               You are cordially invited
             </span>
-            <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#C5A55A]" />
+            <div className="h-px w-8 bg-gradient-to-l from-transparent to-[#C5A55A] sm:w-12" />
           </div>
 
           {event?.tagline && (
@@ -160,40 +160,40 @@ export default async function RsvpPage({
             </p>
           )}
 
-          <h1 className="text-3xl font-bold text-[#2D2417] sm:text-4xl" style={{ fontFamily: "Georgia, serif" }}>
+          <h1 className="text-2xl font-bold text-[#2D2417] sm:text-4xl" style={{ fontFamily: "Georgia, serif" }}>
             {event?.name ?? "E&M Imogu 30th Anniversary"}
           </h1>
 
           {/* Decorative divider */}
-          <div className="mx-auto my-4 h-px w-24 bg-gradient-to-r from-transparent via-[#C5A55A] to-transparent" />
+          <div className="mx-auto my-3 h-px w-24 bg-gradient-to-r from-transparent via-[#C5A55A] to-transparent sm:my-4" />
 
           {/* Date & venue */}
           {(formattedDate || event?.venue) && (
             <div className="space-y-1">
               {formattedDate && (
-                <p className="text-sm font-semibold tracking-wide text-[#5C4D3C]">
+                <p className="text-sm font-semibold tracking-wide text-[#3D2E1E]">
                   {formattedDate}
                   {formattedTime && (
-                    <span className="text-[#8B7355]"> at {formattedTime}</span>
+                    <span className="text-[#5C4D3C]"> at {formattedTime}</span>
                   )}
                 </p>
               )}
               {event?.venue && (
-                <p className="text-sm text-[#8B7355]">{event.venue}</p>
+                <p className="text-sm font-medium text-[#5C4D3C]">{event.venue}</p>
               )}
             </div>
           )}
 
           {/* Dress code & color */}
           {(event?.dress_code || event?.dress_color) && (
-            <div className="mt-4 space-y-1 rounded-lg border border-[#C5A55A]/20 bg-[#FFFDF7] px-4 py-3">
+            <div className="mt-3 space-y-1 rounded-lg border border-[#C5A55A]/30 bg-[#FFFDF7] px-4 py-3 sm:mt-4">
               {event.dress_code && (
-                <p className="text-sm font-medium text-[#5C4D3C]">
+                <p className="text-sm font-medium text-[#3D2E1E]">
                   Dress Code for Guests is <span className="text-[#C5A55A]">{event.dress_code}</span>
                 </p>
               )}
               {event.dress_color && (
-                <p className="text-sm font-medium text-[#5C4D3C]">
+                <p className="text-sm font-medium text-[#3D2E1E]">
                   Dress Color for Guests is <span className="text-[#C5A55A]">{event.dress_color}</span>
                 </p>
               )}
@@ -201,14 +201,14 @@ export default async function RsvpPage({
           )}
 
           {invite.note && (
-            <p className="mt-4 rounded-lg border border-[#C5A55A]/20 bg-[#FFFDF7] px-4 py-2 text-sm font-medium text-[#8B7355]">
+            <p className="mt-3 rounded-lg border border-[#C5A55A]/30 bg-[#FFFDF7] px-4 py-2 text-sm font-medium text-[#5C4D3C] sm:mt-4">
               {invite.note}
             </p>
           )}
 
           {/* Contact phone */}
           {event?.phone && (
-            <p className="mt-3 text-sm text-[#8B7355]">
+            <p className="mt-3 text-sm text-[#5C4D3C]">
               For enquiries, call or text{" "}
               <a href={`tel:${event.phone}`} className="font-semibold text-[#C5A55A] underline">
                 {event.phone}
@@ -217,14 +217,14 @@ export default async function RsvpPage({
           )}
 
           {!statusMessage && (
-            <p className="mt-4 text-sm font-semibold text-[#C5A55A]">
+            <p className="mt-3 text-sm font-semibold text-[#C5A55A] sm:mt-4">
               RSVP now to retain your seat, link expires in 7 days.
             </p>
           )}
         </div>
 
         {statusMessage ? (
-          <div className="rounded-2xl border-2 border-[#C5A55A]/20 bg-white p-6 text-center shadow-lg">
+          <div className="rounded-2xl border-2 border-[#C5A55A]/20 bg-white px-5 py-6 text-center shadow-lg sm:p-6">
             <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#C5A55A]/30">
               <span className="text-base text-[#C5A55A]">!</span>
             </div>
