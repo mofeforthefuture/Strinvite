@@ -47,10 +47,10 @@ export default function TicketCard({
   }
 
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="flex w-full max-w-72 flex-col items-center gap-3">
       <div
         ref={cardRef}
-        className="w-64 overflow-hidden rounded-2xl bg-slate-900 shadow-2xl ring-1 ring-slate-700"
+        className="w-full overflow-hidden rounded-2xl bg-slate-900 shadow-2xl ring-1 ring-slate-700"
         style={{ fontFamily: "sans-serif" }}
       >
         {/* Header */}
@@ -59,11 +59,14 @@ export default function TicketCard({
             Event ticket
           </p>
           <p className="mt-0.5 text-sm font-bold leading-tight">{eventName}</p>
-          {(eventDate || venue) && (
-            <p className="mt-0.5 text-[10px] opacity-75">
+          {venue && (
+            <p className="mt-1 text-xs opacity-90">
               {venue}
-              {venue && eventDate && " · "}
-              {eventDate && new Date(eventDate).toLocaleString()}
+            </p>
+          )}
+          {eventDate && (
+            <p className="mt-0.5 text-xs opacity-90">
+              {new Date(eventDate).toLocaleString()}
             </p>
           )}
         </div>
