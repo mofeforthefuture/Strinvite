@@ -4,7 +4,16 @@ import { useEffect, useRef, useState } from "react";
 
 type Result =
   | { ok: true; lead_name: string; party_size: number; guest_names: string[] }
-  | { ok: false; reason: "already_used" | "invalid" | "scanning_disabled" };
+  | {
+      ok: false;
+      reason:
+        | "already_used"
+        | "invalid"
+        | "scanning_disabled"
+        | "unauthorized"
+        | "forbidden"
+        | "wrong_event";
+    };
 
 type Props = { eventId: string };
 
@@ -45,7 +54,7 @@ export default function QRScanner({ eventId }: Props) {
     const res = await fetch("/api/checkin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({ code, eventId }),
     });
     const data = await res.json();
     setResult(data);
@@ -65,6 +74,9 @@ export default function QRScanner({ eventId }: Props) {
     already_used: "Already checked in",
     invalid: "Invalid ticket",
     scanning_disabled: "Scanning is paused by admin",
+    unauthorized: "Please sign in again",
+    forbidden: "Not allowed for this event",
+    wrong_event: "Ticket is for a different event",
   };
 
   return (

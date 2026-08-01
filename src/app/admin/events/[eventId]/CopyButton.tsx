@@ -37,9 +37,8 @@ export default function CopyButton({
       const expiry = new Date(expiresAt);
       const now = new Date();
       const diffMs = expiry.getTime() - now.getTime();
-      if (diffMs <= 0) {
-        parts.push("Link expired");
-      } else {
+      // Past-due: don't tell guests the link is "expired" — page still shows details
+      if (diffMs > 0) {
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
         const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         if (diffDays > 0) {
