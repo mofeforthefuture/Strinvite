@@ -79,7 +79,6 @@ export async function GET(
 
   type ExportRow = {
     invite: string;
-    lead_name: string;
     guest_name: string;
     role: "Lead" | "Guest";
     ticket_code: string;
@@ -94,25 +93,24 @@ export async function GET(
       (rsvp.invites?.label && rsvp.invites.label.trim()) ||
       rsvp.invites?.slug ||
       "Invite";
-    const leadName = rsvp.lead_name ?? "";
+    const leadName = (rsvp.lead_name ?? "").trim();
     const matchingTickets = (rsvp.tickets ?? []).filter(
       (t) => t.checked_in === checkedIn
     );
 
     const ordered = [...matchingTickets].sort((a, b) => {
-      const aIsLead = a.name.trim().toLowerCase() === leadName.trim().toLowerCase();
-      const bIsLead = b.name.trim().toLowerCase() === leadName.trim().toLowerCase();
+      const aIsLead = a.name.trim().toLowerCase() === leadName.toLowerCase();
+      const bIsLead = b.name.trim().toLowerCase() === leadName.toLowerCase();
       if (aIsLead && !bIsLead) return -1;
       if (!aIsLead && bIsLead) return 1;
       return a.name.localeCompare(b.name);
     });
 
+    // One row per ticket — each guest name appears once
     const rows: ExportRow[] = ordered.map((ticket) => {
-      const isLead =
-        ticket.name.trim().toLowerCase() === leadName.trim().toLowerCase();
+      const isLead = ticket.name.trim().toLowerCase() === leadName.toLowerCase();
       return {
         invite: inviteLabel,
-        lead_name: leadName,
         guest_name: ticket.name,
         role: isLead ? "Lead" : "Guest",
         ticket_code: ticket.confirmation_code,
@@ -128,19 +126,33 @@ export async function GET(
     return { invite: inviteLabel, lead_name: leadName, rows };
   });
 
-  // Party order: invite label, then lead name (skip empty parties after filter)
+  // Party order: invite label, then lead name
   parties.sort((a, b) => {
     const byInvite = a.invite.localeCompare(b.invite);
     if (byInvite !== 0) return byInvite;
     return a.lead_name.localeCompare(b.lead_name);
   });
 
-  const exportRows = parties.flatMap((p) => p.rows);
+  // Invite / contact / date only on the first row of each party (no repeated lead block)
+  const csvBody = parties.flatMap((p) =>
+    p.rows.map((r, index) => {
+      const isFirst = index === 0;
+      return [
+        isFirst ? r.invite : "",
+        r.guest_name,
+        r.role,
+        r.ticket_code,
+        isFirst ? r.phone : "",
+        isFirst ? r.email : "",
+        isFirst ? r.rsvp_date : "",
+        r.checked_in_at,
+      ];
+    })
+  );
 
   const rows = [
     [
       "Invite",
-      "RSVP Lead",
       "Guest Name",
       "Role",
       "Ticket Code",
@@ -149,17 +161,7 @@ export async function GET(
       "RSVP Date",
       "Checked In At",
     ],
-    ...exportRows.map((r) => [
-      r.invite,
-      r.lead_name,
-      r.guest_name,
-      r.role,
-      r.ticket_code,
-      r.phone,
-      r.email,
-      r.rsvp_date,
-      r.checked_in_at,
-    ]),
+    ...csvBody,
   ];
 
   const csv = rows
