@@ -107,24 +107,21 @@ export default async function RsvpPage({
   const used = (existingRsvps ?? []).reduce((s, r) => s + r.party_size, 0);
   const remaining = invite.max_guests - used;
   const full = remaining <= 0;
+  const rsvpClosed = !invite.is_active || full || expired;
+  const hasConfirmations = (existingRsvps ?? []).length > 0;
 
-  // Capacity first: fully booked beats link expiry (matches admin)
-  // RSVP may be closed, but the page stays viewable for event details + tickets
-  const statusMessage = !invite.is_active
-    ? "New RSVPs are closed for this invite."
+  // Never say "expired" to guests — invite card stays the main experience
+  const statusMessage = !rsvpClosed
+    ? null
     : full
-    ? "This invite is fully booked — new RSVPs are closed."
-    : expired
-    ? "This invite link has expired — new RSVPs are closed."
-    : null;
+      ? "This invite is fully booked."
+      : "New RSVPs are closed for this invite.";
 
-  const statusHint = !invite.is_active
-    ? "You can still view the event details above, and any confirmed tickets below."
-    : full
-    ? "You can still view the event details above. If you already confirmed, open the tickets section to re-download."
-    : expired
-    ? "You can still view the date, venue, and dress details above. Anyone already confirmed can re-download tickets below."
-    : null;
+  const statusHint = !rsvpClosed
+    ? null
+    : hasConfirmations
+      ? "Event details are on the card above. Open the tickets section to view or re-download your tickets."
+      : "You can still view the event date, venue, and dress details on the card above.";
 
   const rsvpIds = (existingRsvps ?? []).map((r) => r.id);
   const { data: ticketRows } = rsvpIds.length
@@ -254,7 +251,7 @@ export default async function RsvpPage({
 
           {canRsvp && (
             <p className="mt-3 text-sm font-semibold text-[#C5A55A] sm:mt-4">
-              RSVP now to retain your seat, link expires in 7 days.
+              RSVP now to retain your seat.
             </p>
           )}
         </div>
@@ -268,11 +265,8 @@ export default async function RsvpPage({
         />
 
         {statusMessage ? (
-          <div className="rounded-2xl border-2 border-[#C5A55A]/20 bg-white px-5 py-6 text-center shadow-lg sm:p-6">
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#C5A55A]/30">
-              <span className="text-base text-[#C5A55A]">!</span>
-            </div>
-            <p className="text-base font-medium text-[#2D2417]">{statusMessage}</p>
+          <div className="rounded-2xl border border-[#C5A55A]/25 bg-white px-5 py-5 text-center shadow-sm sm:p-5">
+            <p className="text-base font-semibold text-[#2D2417]">{statusMessage}</p>
             {statusHint && (
               <p className="mt-2 text-sm text-[#8A7B6A]">{statusHint}</p>
             )}

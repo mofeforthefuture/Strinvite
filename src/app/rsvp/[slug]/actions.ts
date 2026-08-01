@@ -29,7 +29,7 @@ export async function submitRsvp(formData: FormData) {
   if (!invite) redirect(`/rsvp/${slug}?error=Invite+not+found`);
   if (!invite.is_active) redirect(`/rsvp/${slug}?error=This+invite+is+no+longer+active`);
   if (new Date(invite.expires_at) < new Date())
-    redirect(`/rsvp/${slug}?error=This+invite+has+expired`);
+    redirect(`/rsvp/${slug}?error=New+RSVPs+are+closed+for+this+invite`);
 
   // Check remaining capacity
   const { data: existing } = await supabase
