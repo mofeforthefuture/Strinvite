@@ -1,6 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
+export function isLockedTestEvent(name: string) {
+  return name.trim().startsWith("[TEST]");
+}
+
 export async function requireStaffAccess(eventId: string) {
   const supabase = await createClient();
   const {
@@ -17,6 +21,16 @@ export async function requireStaffAccess(eventId: string) {
     .maybeSingle();
 
   if (!data) redirect("/dashboard");
+
+  const { data: event } = await supabase
+    .from("events")
+    .select("name")
+    .eq("id", eventId)
+    .maybeSingle();
+
+  if (event && isLockedTestEvent(event.name)) {
+    redirect("/dashboard");
+  }
 
   return { supabase, user };
 }

@@ -145,6 +145,16 @@ export async function createStaffAccount(formData: FormData) {
 
   if (existingUser) {
     userId = existingUser.id;
+    // Update password so re-adding staff with a new password actually works
+    const { error: pwError } = await serviceClient.auth.admin.updateUserById(
+      existingUser.id,
+      { password, email_confirm: true }
+    );
+    if (pwError) {
+      redirect(
+        `/admin/events/${eventId}?error=${encodeURIComponent(pwError.message)}`
+      );
+    }
   } else {
     // Create the user account via admin API (no email confirmation needed)
     const { data: newUser, error: createError } =

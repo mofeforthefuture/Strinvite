@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { signOut } from "@/app/login/actions";
 import ActionButton from "@/components/ActionButton";
+import { isLockedTestEvent } from "@/lib/staff";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -51,28 +52,59 @@ export default async function DashboardPage() {
             {rows.map((a) => {
               const event = a.events;
               if (!event) return null;
+              const locked = isLockedTestEvent(event.name);
               return (
-                <li key={event.id} className="rounded-xl bg-slate-900 p-5 ring-1 ring-slate-800">
-                  <p className="font-semibold text-slate-100">{event.name}</p>
-                  <p className="text-sm text-slate-400">
-                    {event.venue && `${event.venue} · `}
-                    {event.event_date
-                      ? new Date(event.event_date).toLocaleString()
-                      : "No date set"}
-                  </p>
-                  <div className="mt-3 flex gap-2">
-                    <Link
-                      href={`/dashboard/${event.id}/scan`}
-                      className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-slate-100 ring-1 ring-slate-700 hover:bg-slate-700 transition-colors"
-                    >
-                      Scanner
-                    </Link>
-                    <Link
-                      href={`/dashboard/${event.id}/rsvps`}
-                      className="rounded-lg px-4 py-2 text-sm font-medium text-slate-300 ring-1 ring-slate-700 hover:bg-slate-800 transition-colors"
-                    >
-                      RSVPs
-                    </Link>
+                <li
+                  key={event.id}
+                  className={`rounded-xl bg-slate-900 p-5 ring-1 ring-slate-800 ${
+                    locked ? "relative opacity-40 grayscale" : ""
+                  }`}
+                >
+                  {locked && (
+                    <div className="pointer-events-none absolute inset-0 z-10 rounded-xl bg-slate-950/50" />
+                  )}
+                  <div className={locked ? "select-none" : undefined}>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-semibold text-slate-100">{event.name}</p>
+                      {locked && (
+                        <span className="shrink-0 rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400 ring-1 ring-slate-700">
+                          Locked
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-slate-400">
+                      {event.venue && `${event.venue} · `}
+                      {event.event_date
+                        ? new Date(event.event_date).toLocaleString()
+                        : "No date set"}
+                    </p>
+                    <div className="mt-3 flex gap-2">
+                      {locked ? (
+                        <>
+                          <span className="cursor-not-allowed rounded-lg bg-slate-800/60 px-4 py-2 text-sm font-medium text-slate-500 ring-1 ring-slate-800">
+                            Scanner
+                          </span>
+                          <span className="cursor-not-allowed rounded-lg px-4 py-2 text-sm font-medium text-slate-600 ring-1 ring-slate-800">
+                            RSVPs
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Link
+                            href={`/dashboard/${event.id}/scan`}
+                            className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-slate-100 ring-1 ring-slate-700 hover:bg-slate-700 transition-colors"
+                          >
+                            Scanner
+                          </Link>
+                          <Link
+                            href={`/dashboard/${event.id}/rsvps`}
+                            className="rounded-lg px-4 py-2 text-sm font-medium text-slate-300 ring-1 ring-slate-700 hover:bg-slate-800 transition-colors"
+                          >
+                            RSVPs
+                          </Link>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </li>
               );
