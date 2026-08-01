@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { notFound } from "next/navigation";
 import TicketCard from "@/components/TicketCard";
 
@@ -8,41 +8,50 @@ export default async function TicketPage({
   params: Promise<{ code: string }>;
 }) {
   const { code } = await params;
-  const supabase = await createClient();
+  const service = createServiceClient();
 
-  const { data: rsvp } = await supabase
+  const { data: rsvp } = await service
     .from("rsvps")
-    .select(
-      "id, lead_name, party_size, created_at, invites(label, events(name, event_date, venue))"
-    )
+    .select("id, lead_name, party_size, created_at, invite_id")
     .eq("confirmation_code", code.toUpperCase())
     .maybeSingle();
 
   if (!rsvp) notFound();
 
-  const { data: tickets } = await supabase
+  const { data: invite } = await service
+    .from("invites")
+    .select("label, event_id")
+    .eq("id", rsvp.invite_id)
+    .single();
+
+  const { data: event } = invite?.event_id
+    ? await service
+        .from("events")
+        .select("name, event_date, venue")
+        .eq("id", invite.event_id)
+        .single()
+    : { data: null };
+
+  const { data: tickets } = await service
     .from("tickets")
     .select("id, name, confirmation_code")
     .eq("rsvp_id", rsvp.id)
     .order("created_at");
-
-  const invite = rsvp.invites as unknown as {
-    label: string | null;
-    events: { name: string; event_date: string | null; venue: string | null } | null;
-  } | null;
-
-  const event = invite?.events;
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 px-4 py-6 sm:p-6">
       <div className="mx-auto max-w-4xl">
         <div className="mb-8 text-center">
           <p className="text-4xl">🎉</p>
-          <h1 className="mt-2 text-xl font-bold text-slate-100 sm:text-2xl">You&apos;re all set!</h1>
+          <h1 className="mt-2 text-xl font-bold text-slate-100 sm:text-2xl">
+            You&apos;re all set!
+          </h1>
           <p className="mt-1 text-sm text-slate-400 sm:text-base">
             {tickets?.length ?? rsvp.party_size} ticket
             {(tickets?.length ?? rsvp.party_size) !== 1 ? "s" : ""} generated for{" "}
-            <span className="font-semibold text-slate-200">{event?.name ?? "your event"}</span>
+            <span className="font-semibold text-slate-200">
+              {event?.name ?? "your event"}
+            </span>
           </p>
           {(event?.venue || event?.event_date) && (
             <div className="mt-2 space-y-0.5">

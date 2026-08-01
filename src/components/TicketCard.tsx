@@ -10,6 +10,8 @@ type Props = {
   eventName: string;
   eventDate?: string | null;
   venue?: string | null;
+  /** Download button contrast: onDark for ticket page, onLight for cream RSVP page */
+  tone?: "onDark" | "onLight";
 };
 
 export default function TicketCard({
@@ -18,6 +20,7 @@ export default function TicketCard({
   eventName,
   eventDate,
   venue,
+  tone = "onDark",
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -45,6 +48,11 @@ export default function TicketCard({
       setDownloading(false);
     }
   }
+
+  const downloadClass =
+    tone === "onLight"
+      ? "flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-[#5C4D3C] ring-1 ring-[#C5A55A]/40 hover:bg-[#FFFDF7] disabled:opacity-50 transition-colors"
+      : "flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-slate-300 ring-1 ring-slate-700 hover:bg-slate-800 hover:text-slate-100 disabled:opacity-50 transition-colors";
 
   return (
     <div className="flex w-full max-w-72 flex-col items-center gap-3">
@@ -89,7 +97,7 @@ export default function TicketCard({
       <button
         onClick={handleDownload}
         disabled={downloading}
-        className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-slate-300 ring-1 ring-slate-700 hover:bg-slate-800 hover:text-slate-100 disabled:opacity-50 transition-colors"
+        className={downloadClass}
       >
         {downloading ? "Saving…" : "⬇ Download ticket"}
       </button>

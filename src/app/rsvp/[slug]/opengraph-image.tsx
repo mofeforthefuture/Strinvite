@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -13,20 +13,21 @@ export default async function OGImage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const service = createServiceClient();
 
-  const { data: invite } = await supabase
+  const { data: invite } = await service
     .from("invites")
-    .select("label, events(name, tagline, event_date, venue)")
+    .select("label, event_id")
     .eq("slug", slug)
     .maybeSingle();
 
-  const event = invite?.events as unknown as {
-    name: string;
-    tagline: string | null;
-    event_date: string | null;
-    venue: string | null;
-  } | null;
+  const { data: event } = invite?.event_id
+    ? await service
+        .from("events")
+        .select("name, tagline, event_date, venue")
+        .eq("id", invite.event_id)
+        .single()
+    : { data: null };
 
   const eventName = event?.name ?? "RSVP for E & M 30th anniversary";
   const tagline = event?.tagline ?? "";

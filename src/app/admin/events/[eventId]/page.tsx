@@ -35,9 +35,28 @@ export default async function EventDetailPage({
   const { data: rsvpCounts } = inviteIds.length
     ? await supabase
         .from("rsvps")
-        .select("invite_id, party_size")
+        .select("id, invite_id, party_size")
         .in("invite_id", inviteIds)
     : { data: [] };
+
+  const rsvpIds = (rsvpCounts ?? []).map((r) => r.id);
+  const { data: reservedTickets } = rsvpIds.length
+    ? await supabase
+        .from("tickets")
+        .select("id, name, rsvp_id")
+        .in("rsvp_id", rsvpIds)
+        .ilike("name", "%reserved%")
+    : { data: [] };
+
+  const unconfirmedByInvite = new Map<string, number>();
+  for (const ticket of reservedTickets ?? []) {
+    const rsvp = (rsvpCounts ?? []).find((r) => r.id === ticket.rsvp_id);
+    if (!rsvp) continue;
+    unconfirmedByInvite.set(
+      rsvp.invite_id,
+      (unconfirmedByInvite.get(rsvp.invite_id) ?? 0) + 1
+    );
+  }
 
   const usedCapacity = (inviteId: string) =>
     (rsvpCounts ?? [])
@@ -46,18 +65,39 @@ export default async function EventDetailPage({
 
   const invitesWithStatus = (invites ?? []).map((invite) => {
     const used = usedCapacity(invite.id);
+    const remaining = Math.max(0, invite.max_guests - used);
     const expired = new Date(invite.expires_at) < new Date();
     const full = used >= invite.max_guests;
+    const unconfirmedExtras = unconfirmedByInvite.get(invite.id) ?? 0;
+    // Link no longer accepting RSVPs
     const dead = !invite.is_active || expired || full;
-    const status: "Active" | "Expired" | "Full" | "Deactivated" = !invite.is_active
+    // Capacity outcome beats link expiry: Full stays Full even after the 7-day link ends
+    const status: "Open" | "Expired" | "Full" | "Deactivated" = !invite.is_active
       ? "Deactivated"
-      : expired
-      ? "Expired"
       : full
       ? "Full"
-      : "Active";
-    return { ...invite, used, expired, full, dead, status };
+      : expired
+      ? "Expired"
+      : "Open";
+    return {
+      ...invite,
+      used,
+      remaining,
+      expired,
+      full,
+      dead,
+      status,
+      unconfirmedExtras,
+    };
   });
+
+  const openCount = invitesWithStatus.filter((i) => i.status === "Open").length;
+  const fullCount = invitesWithStatus.filter((i) => i.status === "Full").length;
+  const expiredOpenCount = invitesWithStatus.filter((i) => i.status === "Expired").length;
+  const unconfirmedInviteCount = invitesWithStatus.filter(
+    (i) => i.unconfirmedExtras > 0
+  ).length;
+  const expectedGuests = (rsvpCounts ?? []).reduce((sum, r) => sum + r.party_size, 0);
 
   const { data: staff } = await supabase
     .from("event_staff")
@@ -101,16 +141,26 @@ export default async function EventDetailPage({
         </div>
 
         {/* Stats overview */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           <div className="rounded-xl bg-slate-900 p-4 ring-1 ring-slate-800">
-            <p className="text-sm font-medium text-slate-400">Invites sent</p>
-            <p className="mt-1 text-2xl font-bold text-slate-100">{invitesWithStatus.length}</p>
+            <p className="text-sm font-medium text-slate-400">Open</p>
+            <p className="mt-1 text-2xl font-bold text-emerald-400">{openCount}</p>
+          </div>
+          <div className="rounded-xl bg-slate-900 p-4 ring-1 ring-slate-800">
+            <p className="text-sm font-medium text-slate-400">Full</p>
+            <p className="mt-1 text-2xl font-bold text-sky-400">{fullCount}</p>
+          </div>
+          <div className="rounded-xl bg-slate-900 p-4 ring-1 ring-slate-800">
+            <p className="text-sm font-medium text-slate-400">Expired · seats left</p>
+            <p className="mt-1 text-2xl font-bold text-amber-400">{expiredOpenCount}</p>
+          </div>
+          <div className="rounded-xl bg-slate-900 p-4 ring-1 ring-slate-800">
+            <p className="text-sm font-medium text-slate-400">Unconfirmed extras</p>
+            <p className="mt-1 text-2xl font-bold text-violet-400">{unconfirmedInviteCount}</p>
           </div>
           <div className="rounded-xl bg-slate-900 p-4 ring-1 ring-slate-800">
             <p className="text-sm font-medium text-slate-400">Expected guests</p>
-            <p className="mt-1 text-2xl font-bold text-slate-100">
-              {(rsvpCounts ?? []).reduce((sum, r) => sum + r.party_size, 0)}
-            </p>
+            <p className="mt-1 text-2xl font-bold text-slate-100">{expectedGuests}</p>
           </div>
         </div>
 

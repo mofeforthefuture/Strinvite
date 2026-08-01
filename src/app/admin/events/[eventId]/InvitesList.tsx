@@ -6,7 +6,7 @@ import CopyButton from "./CopyButton";
 import DeleteInviteButton from "./DeleteInviteButton";
 import ActionButton from "@/components/ActionButton";
 
-type InviteStatus = "Active" | "Expired" | "Full" | "Deactivated";
+type InviteStatus = "Open" | "Expired" | "Full" | "Deactivated";
 
 export type InviteWithStatus = {
   id: string;
@@ -17,14 +17,84 @@ export type InviteWithStatus = {
   is_active: boolean;
   created_at: string;
   used: number;
+  remaining: number;
   expired: boolean;
   full: boolean;
   dead: boolean;
   status: InviteStatus;
+  unconfirmedExtras: number;
 };
 
-const FILTERS: Array<"All" | InviteStatus> = ["All", "Active", "Expired", "Full", "Deactivated"];
+type FilterKey = "All" | InviteStatus | "Unconfirmed";
+
+const FILTERS: Array<{ key: FilterKey; label: string }> = [
+  { key: "All", label: "All" },
+  { key: "Open", label: "Open" },
+  { key: "Full", label: "Full" },
+  { key: "Expired", label: "Expired · seats left" },
+  { key: "Unconfirmed", label: "Unconfirmed extras" },
+  { key: "Deactivated", label: "Deactivated" },
+];
+
 const PAGE_SIZE = 8;
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatDateTime(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function seatLabel(n: number) {
+  return n === 1 ? "1 seat" : `${n} seats`;
+}
+
+function helperText(invite: InviteWithStatus) {
+  if (invite.unconfirmedExtras > 0) {
+    const n = invite.unconfirmedExtras;
+    const extras = n === 1 ? "1 unconfirmed extra seat" : `${n} unconfirmed extra seats`;
+    return `${invite.used} / ${invite.max_guests} guests · ${extras}`;
+  }
+  if (invite.status === "Full") {
+    return invite.expired
+      ? `Complete · link ended ${formatDate(invite.expires_at)}`
+      : `Complete · ${invite.used} / ${invite.max_guests} guests`;
+  }
+  if (invite.status === "Expired") {
+    return `Link expired · ${seatLabel(invite.remaining)} unused`;
+  }
+  if (invite.status === "Deactivated") {
+    return invite.remaining > 0
+      ? `Deactivated · ${seatLabel(invite.remaining)} unused`
+      : `Deactivated · ${invite.used} / ${invite.max_guests} guests`;
+  }
+  // Open
+  return `Expires ${formatDateTime(invite.expires_at)} · ${seatLabel(invite.remaining)} left`;
+}
+
+function badgeClass(status: InviteStatus) {
+  switch (status) {
+    case "Open":
+      return "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20";
+    case "Full":
+      return "bg-sky-500/10 text-sky-400 ring-1 ring-sky-500/20";
+    case "Expired":
+      return "bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20";
+    case "Deactivated":
+      return "bg-slate-800 text-slate-500 ring-1 ring-slate-700";
+  }
+}
 
 export default function InvitesList({
   eventId,
@@ -38,8 +108,23 @@ export default function InvitesList({
   invites: InviteWithStatus[];
 }) {
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<(typeof FILTERS)[number]>("All");
+  const [statusFilter, setStatusFilter] = useState<FilterKey>("All");
   const [page, setPage] = useState(1);
+
+  const statusCounts = useMemo(() => {
+    const counts: Record<InviteStatus, number> = {
+      Open: 0,
+      Full: 0,
+      Expired: 0,
+      Deactivated: 0,
+    };
+    let unconfirmed = 0;
+    for (const invite of invites) {
+      counts[invite.status] += 1;
+      if (invite.unconfirmedExtras > 0) unconfirmed += 1;
+    }
+    return { ...counts, Unconfirmed: unconfirmed };
+  }, [invites]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -48,7 +133,12 @@ export default function InvitesList({
         !q ||
         (invite.label ?? "").toLowerCase().includes(q) ||
         invite.slug.toLowerCase().includes(q);
-      const matchesStatus = statusFilter === "All" || invite.status === statusFilter;
+      const matchesStatus =
+        statusFilter === "All"
+          ? true
+          : statusFilter === "Unconfirmed"
+            ? invite.unconfirmedExtras > 0
+            : invite.status === statusFilter;
       return matchesQuery && matchesStatus;
     });
   }, [invites, query, statusFilter]);
@@ -82,23 +172,31 @@ export default function InvitesList({
           className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:max-w-xs"
         />
         <div className="flex flex-wrap gap-1.5">
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => {
-                setStatusFilter(f);
-                setPage(1);
-              }}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                statusFilter === f
-                  ? "bg-indigo-600 text-white"
-                  : "bg-slate-800 text-slate-400 ring-1 ring-slate-700 hover:bg-slate-700"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
+          {FILTERS.map((f) => {
+            const count =
+              f.key === "All"
+                ? invites.length
+                : f.key === "Unconfirmed"
+                  ? statusCounts.Unconfirmed
+                  : statusCounts[f.key as InviteStatus];
+            return (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => {
+                  setStatusFilter(f.key);
+                  setPage(1);
+                }}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  statusFilter === f.key
+                    ? "bg-indigo-600 text-white"
+                    : "bg-slate-800 text-slate-400 ring-1 ring-slate-700 hover:bg-slate-700"
+                }`}
+              >
+                {f.label} ({count})
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -131,22 +229,19 @@ export default function InvitesList({
                     <span>
                       {invite.used} / {invite.max_guests} guests
                     </span>
-                    <span>
-                      {invite.expired
-                        ? `Expired ${new Date(invite.expires_at).toLocaleDateString()}`
-                        : `Expires ${new Date(invite.expires_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}`}
-                    </span>
+                    <span>{helperText(invite)}</span>
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                  {invite.unconfirmedExtras > 0 && (
+                    <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-xs font-medium text-violet-400 ring-1 ring-violet-500/20">
+                      Unconfirmed extras
+                    </span>
+                  )}
                   <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      invite.dead
-                        ? "bg-slate-800 text-slate-500"
-                        : "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20"
-                    }`}
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${badgeClass(invite.status)}`}
                   >
-                    {invite.status}
+                    {invite.status === "Expired" ? "Expired · seats left" : invite.status}
                   </span>
                   {invite.is_active ? (
                     <form>
