@@ -45,12 +45,10 @@ export async function GET(
 
   if (!event) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // Same query path as the RSVP list pages (one-level invite filter), then
-  // flatten tickets and filter by check-in in app code.
   const { data: rsvps, error } = await service
     .from("rsvps")
     .select(
-      "lead_name, email, phone, created_at, invites!inner(event_id), tickets(name, confirmation_code, checked_in, checked_in_at, created_at)"
+      "lead_name, email, phone, created_at, invites!inner(event_id, label, slug), tickets(name, confirmation_code, checked_in, checked_in_at, created_at)"
     )
     .eq("invites.event_id", eventId)
     .order("created_at", { ascending: false });
@@ -75,33 +73,92 @@ export async function GET(
     email: string | null;
     phone: string | null;
     created_at: string;
+    invites: { event_id: string; label: string | null; slug: string } | null;
     tickets: TicketRow[] | null;
   };
 
-  const tickets = ((rsvps ?? []) as unknown as RsvpRow[])
-    .flatMap((rsvp) =>
-      (rsvp.tickets ?? []).map((ticket) => ({
-        ...ticket,
-        lead_name: rsvp.lead_name,
-        email: rsvp.email,
-        phone: rsvp.phone,
-        // Prefer ticket created_at; fall back to RSVP date
-        rsvp_date: ticket.created_at ?? rsvp.created_at,
-      }))
-    )
-    .filter((t) => t.checked_in === checkedIn)
-    .sort((a, b) => a.name.localeCompare(b.name));
+  type ExportRow = {
+    invite: string;
+    lead_name: string;
+    guest_name: string;
+    role: "Lead" | "Guest";
+    ticket_code: string;
+    phone: string;
+    email: string;
+    rsvp_date: string;
+    checked_in_at: string;
+  };
+
+  const parties = ((rsvps ?? []) as unknown as RsvpRow[]).map((rsvp) => {
+    const inviteLabel =
+      (rsvp.invites?.label && rsvp.invites.label.trim()) ||
+      rsvp.invites?.slug ||
+      "Invite";
+    const leadName = rsvp.lead_name ?? "";
+    const matchingTickets = (rsvp.tickets ?? []).filter(
+      (t) => t.checked_in === checkedIn
+    );
+
+    const ordered = [...matchingTickets].sort((a, b) => {
+      const aIsLead = a.name.trim().toLowerCase() === leadName.trim().toLowerCase();
+      const bIsLead = b.name.trim().toLowerCase() === leadName.trim().toLowerCase();
+      if (aIsLead && !bIsLead) return -1;
+      if (!aIsLead && bIsLead) return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    const rows: ExportRow[] = ordered.map((ticket) => {
+      const isLead =
+        ticket.name.trim().toLowerCase() === leadName.trim().toLowerCase();
+      return {
+        invite: inviteLabel,
+        lead_name: leadName,
+        guest_name: ticket.name,
+        role: isLead ? "Lead" : "Guest",
+        ticket_code: ticket.confirmation_code,
+        phone: rsvp.phone ?? "",
+        email: rsvp.email ?? "",
+        rsvp_date: new Date(ticket.created_at ?? rsvp.created_at).toLocaleString(),
+        checked_in_at: ticket.checked_in_at
+          ? new Date(ticket.checked_in_at).toLocaleString()
+          : "",
+      };
+    });
+
+    return { invite: inviteLabel, lead_name: leadName, rows };
+  });
+
+  // Party order: invite label, then lead name (skip empty parties after filter)
+  parties.sort((a, b) => {
+    const byInvite = a.invite.localeCompare(b.invite);
+    if (byInvite !== 0) return byInvite;
+    return a.lead_name.localeCompare(b.lead_name);
+  });
+
+  const exportRows = parties.flatMap((p) => p.rows);
 
   const rows = [
-    ["Name", "RSVP Lead", "Email", "Phone", "Ticket Code", "RSVP Date", "Checked In At"],
-    ...tickets.map((t) => [
-      t.name,
-      t.lead_name,
-      t.email ?? "",
-      t.phone ?? "",
-      t.confirmation_code,
-      new Date(t.rsvp_date).toLocaleString(),
-      t.checked_in_at ? new Date(t.checked_in_at).toLocaleString() : "",
+    [
+      "Invite",
+      "RSVP Lead",
+      "Guest Name",
+      "Role",
+      "Ticket Code",
+      "Phone",
+      "Email",
+      "RSVP Date",
+      "Checked In At",
+    ],
+    ...exportRows.map((r) => [
+      r.invite,
+      r.lead_name,
+      r.guest_name,
+      r.role,
+      r.ticket_code,
+      r.phone,
+      r.email,
+      r.rsvp_date,
+      r.checked_in_at,
     ]),
   ];
 
@@ -117,7 +174,7 @@ export async function GET(
 
   return new NextResponse(csv, {
     headers: {
-      "Content-Type": "text/csv",
+      "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="${filename}"`,
     },
   });
