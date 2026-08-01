@@ -1,4 +1,5 @@
 import { requireStaffAccess } from "@/lib/staff";
+import { createServiceClient } from "@/lib/supabase/service";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import LocalTime from "@/components/LocalTime";
@@ -9,9 +10,12 @@ export default async function StaffRsvpsPage({
   params: Promise<{ eventId: string }>;
 }) {
   const { eventId } = await params;
-  const { supabase } = await requireStaffAccess(eventId);
+  await requireStaffAccess(eventId);
 
-  const { data: event } = await supabase
+  // Service client so inactive-invite RSVPs still show for staff
+  const service = createServiceClient();
+
+  const { data: event } = await service
     .from("events")
     .select("name")
     .eq("id", eventId)
@@ -19,7 +23,7 @@ export default async function StaffRsvpsPage({
 
   if (!event) notFound();
 
-  const { data: rsvps } = await supabase
+  const { data: rsvps } = await service
     .from("rsvps")
     .select(
       "id, lead_name, phone, party_size, confirmation_code, created_at, invites!inner(label, slug), tickets(id, name, confirmation_code, checked_in, checked_in_at)"
