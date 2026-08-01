@@ -105,17 +105,23 @@ export async function GET(
       return a.name.localeCompare(b.name);
     });
 
-    const rows: ExportRow[] = ordered.map((ticket) => ({
-      invite: inviteLabel,
-      guest_name: ticket.name,
-      ticket_code: ticket.confirmation_code,
-      phone: rsvp.phone ?? "",
-      email: rsvp.email ?? "",
-      rsvp_date: new Date(ticket.created_at ?? rsvp.created_at).toLocaleString(),
-      checked_in_at: ticket.checked_in_at
-        ? new Date(ticket.checked_in_at).toLocaleString()
-        : "",
-    }));
+    const rows: ExportRow[] = ordered.map((ticket) => {
+      const isUnconfirmed = /reserved/i.test(ticket.name);
+      return {
+        invite: inviteLabel,
+        guest_name: ticket.name,
+        ticket_code: ticket.confirmation_code,
+        phone: rsvp.phone ?? "",
+        email: rsvp.email ?? "",
+        // Every confirmed guest shares the RSVP date; unconfirmed reserved seats stay blank
+        rsvp_date: isUnconfirmed
+          ? ""
+          : new Date(rsvp.created_at).toLocaleString(),
+        checked_in_at: ticket.checked_in_at
+          ? new Date(ticket.checked_in_at).toLocaleString()
+          : "",
+      };
+    });
 
     return { invite: inviteLabel, lead_name: leadName, rows };
   });
@@ -127,7 +133,7 @@ export async function GET(
     return a.lead_name.localeCompare(b.lead_name);
   });
 
-  // Invite / contact / date only on the first row of each party
+  // Invite / phone / email only on first row; RSVP Date on every confirmed guest
   const csvBody = parties.flatMap((p) =>
     p.rows.map((r, index) => {
       const isFirst = index === 0;
@@ -137,7 +143,7 @@ export async function GET(
         r.ticket_code,
         isFirst ? r.phone : "",
         isFirst ? r.email : "",
-        isFirst ? r.rsvp_date : "",
+        r.rsvp_date,
         r.checked_in_at,
       ];
     })
