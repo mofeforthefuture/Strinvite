@@ -25,7 +25,7 @@ export default function ConfirmedTicketsDisclosure({
   const count = tickets.length;
 
   return (
-    <details className="group mb-6 overflow-hidden rounded-2xl border-2 border-[#C5A55A] bg-[#FFF9E8] shadow-md open:shadow-lg">
+    <details className="group mb-6 overflow-hidden rounded-2xl border border-[#C5A55A]/70 bg-[#FFF9E8] shadow-sm open:shadow-md">
       <summary className="cursor-pointer list-none px-4 py-4 sm:px-5 sm:py-5 marker:content-none [&::-webkit-details-marker]:hidden">
         <span className="flex items-center justify-between gap-3">
           <span className="min-w-0 text-left">
@@ -44,7 +44,7 @@ export default function ConfirmedTicketsDisclosure({
           </span>
         </span>
       </summary>
-      <div className="border-t-2 border-[#C5A55A]/40 bg-white px-3 py-5 sm:px-5">
+      <div className="border-t border-[#C5A55A]/35 bg-white px-3 py-5 sm:px-5">
         <p className="mb-5 text-center text-sm font-medium text-[#5C4D3C]">
           Same ticket codes and QR as before. Download again if you need a copy.
         </p>
