@@ -80,7 +80,6 @@ export async function GET(
   type ExportRow = {
     invite: string;
     guest_name: string;
-    role: "Lead" | "Guest";
     ticket_code: string;
     phone: string;
     email: string;
@@ -106,22 +105,17 @@ export async function GET(
       return a.name.localeCompare(b.name);
     });
 
-    // One row per ticket — each guest name appears once
-    const rows: ExportRow[] = ordered.map((ticket) => {
-      const isLead = ticket.name.trim().toLowerCase() === leadName.toLowerCase();
-      return {
-        invite: inviteLabel,
-        guest_name: ticket.name,
-        role: isLead ? "Lead" : "Guest",
-        ticket_code: ticket.confirmation_code,
-        phone: rsvp.phone ?? "",
-        email: rsvp.email ?? "",
-        rsvp_date: new Date(ticket.created_at ?? rsvp.created_at).toLocaleString(),
-        checked_in_at: ticket.checked_in_at
-          ? new Date(ticket.checked_in_at).toLocaleString()
-          : "",
-      };
-    });
+    const rows: ExportRow[] = ordered.map((ticket) => ({
+      invite: inviteLabel,
+      guest_name: ticket.name,
+      ticket_code: ticket.confirmation_code,
+      phone: rsvp.phone ?? "",
+      email: rsvp.email ?? "",
+      rsvp_date: new Date(ticket.created_at ?? rsvp.created_at).toLocaleString(),
+      checked_in_at: ticket.checked_in_at
+        ? new Date(ticket.checked_in_at).toLocaleString()
+        : "",
+    }));
 
     return { invite: inviteLabel, lead_name: leadName, rows };
   });
@@ -133,14 +127,13 @@ export async function GET(
     return a.lead_name.localeCompare(b.lead_name);
   });
 
-  // Invite / contact / date only on the first row of each party (no repeated lead block)
+  // Invite / contact / date only on the first row of each party
   const csvBody = parties.flatMap((p) =>
     p.rows.map((r, index) => {
       const isFirst = index === 0;
       return [
         isFirst ? r.invite : "",
         r.guest_name,
-        r.role,
         r.ticket_code,
         isFirst ? r.phone : "",
         isFirst ? r.email : "",
@@ -154,7 +147,6 @@ export async function GET(
     [
       "Invite",
       "Guest Name",
-      "Role",
       "Ticket Code",
       "Phone",
       "Email",
