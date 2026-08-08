@@ -130,21 +130,30 @@ export async function GET(
     return a.lead_name.localeCompare(b.lead_name);
   });
 
-  // Invite / phone / email only on first row; every guest gets their ticket date
-  const csvBody = parties.flatMap((p) =>
-    p.rows.map((r, index) => {
-      const isFirst = index === 0;
-      return [
-        isFirst ? r.invite : "",
-        r.guest_name,
-        r.ticket_code,
-        isFirst ? r.phone : "",
-        isFirst ? r.email : "",
-        r.rsvp_date,
-        r.checked_in_at,
-      ];
-    })
+  // Flatten parties, then blank invite/phone/email when the invite label
+  // repeats across consecutive parties (e.g. merged families with 2+ RSVPs).
+  const flatRows = parties.flatMap((p) =>
+    p.rows.map((r, index) => ({
+      ...r,
+      isPartyFirst: index === 0,
+    }))
   );
+
+  let lastInviteShown: string | null = null;
+  const csvBody = flatRows.map((r) => {
+    const inviteChanged = r.invite !== lastInviteShown;
+    if (inviteChanged) lastInviteShown = r.invite;
+    const showInviteMeta = inviteChanged;
+    return [
+      showInviteMeta ? r.invite : "",
+      r.guest_name,
+      r.ticket_code,
+      showInviteMeta && r.isPartyFirst ? r.phone : "",
+      showInviteMeta && r.isPartyFirst ? r.email : "",
+      r.rsvp_date,
+      r.checked_in_at,
+    ];
+  });
 
   const rows = [
     [
