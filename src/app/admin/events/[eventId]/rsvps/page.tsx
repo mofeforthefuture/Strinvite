@@ -71,7 +71,7 @@ export default async function RsvpsPage({
             No RSVPs yet.
           </div>
         ) : (
-          <RsvpList rsvps={rows} showEmail />
+          <RsvpList eventId={eventId} rsvps={rows} showEmail />
         )}
       </div>
     </main>

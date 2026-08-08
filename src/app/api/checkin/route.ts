@@ -5,9 +5,14 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   const body = await request.json();
   const code = body?.code;
+  const ticketId = body?.ticketId;
   const eventId = body?.eventId;
+  const manual = Boolean(body?.manual);
 
-  if (!code || typeof code !== "string") {
+  const hasCode = typeof code === "string" && code.trim().length > 0;
+  const hasTicketId = typeof ticketId === "string" && ticketId.trim().length > 0;
+
+  if (!hasCode && !hasTicketId) {
     return NextResponse.json({ ok: false, reason: "invalid" }, { status: 400 });
   }
 
@@ -44,13 +49,19 @@ export async function POST(request: NextRequest) {
 
   const service = createServiceClient();
 
-  const { data: ticket } = await service
+  let query = service
     .from("tickets")
     .select(
       "id, name, checked_in, rsvps(invite_id, invites(event_id, events(scanning_enabled, name)))"
-    )
-    .eq("confirmation_code", code.trim().toUpperCase())
-    .maybeSingle();
+    );
+
+  if (hasTicketId) {
+    query = query.eq("id", ticketId.trim());
+  } else {
+    query = query.eq("confirmation_code", code.trim().toUpperCase());
+  }
+
+  const { data: ticket } = await query.maybeSingle();
 
   if (!ticket) {
     return NextResponse.json({ ok: false, reason: "invalid" });
@@ -74,13 +85,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, reason: "already_used" });
   }
 
-  if (!event?.scanning_enabled) {
+  // Manual list check-in is an admin/staff override; camera scans still respect the pause.
+  if (!manual && !event?.scanning_enabled) {
     return NextResponse.json({ ok: false, reason: "scanning_disabled" });
   }
 
+  const checkedInAt = new Date().toISOString();
   const { error } = await service
     .from("tickets")
-    .update({ checked_in: true, checked_in_at: new Date().toISOString() })
+    .update({ checked_in: true, checked_in_at: checkedInAt })
     .eq("id", ticket.id);
 
   if (error) {
@@ -92,6 +105,7 @@ export async function POST(request: NextRequest) {
     lead_name: ticket.name,
     party_size: 1,
     guest_names: [],
-    event_name: event.name,
+    event_name: event?.name ?? null,
+    checked_in_at: checkedInAt,
   });
 }

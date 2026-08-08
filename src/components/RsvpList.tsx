@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import LocalTime from "@/components/LocalTime";
 
 export type RsvpTicket = {
@@ -30,14 +30,20 @@ const FILTERS: Array<{ key: StatusFilter; label: string }> = [
 ];
 
 export default function RsvpList({
-  rsvps,
+  eventId,
+  rsvps: initialRsvps,
   showEmail = false,
 }: {
+  eventId: string;
   rsvps: RsvpListItem[];
   showEmail?: boolean;
 }) {
+  const [rsvps, setRsvps] = useState(initialRsvps);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [query, setQuery] = useState("");
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
 
   const allTickets = rsvps.flatMap((r) => r.tickets ?? []);
   const checkedInCount = allTickets.filter((t) => t.checked_in).length;
@@ -58,7 +64,11 @@ export default function RsvpList({
       .filter((rsvp) => {
         if (!rsvp.tickets.length) return false;
         if (!q) return true;
-        const invite = (rsvp.invites?.label ?? rsvp.invites?.slug ?? "").toLowerCase();
+        const invite = (
+          rsvp.invites?.label ??
+          rsvp.invites?.slug ??
+          ""
+        ).toLowerCase();
         const lead = rsvp.lead_name.toLowerCase();
         const guestMatch = rsvp.tickets.some(
           (t) =>
@@ -74,6 +84,54 @@ export default function RsvpList({
     in: checkedInCount,
     out: notArrivedCount,
   };
+
+  async function checkInTicket(ticketId: string) {
+    setError(null);
+    setPendingId(ticketId);
+
+    try {
+      const res = await fetch("/api/checkin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticketId, eventId, manual: true }),
+      });
+      const data = await res.json();
+
+      if (!data.ok) {
+        const messages: Record<string, string> = {
+          already_used: "Already checked in",
+          invalid: "Could not check in this guest",
+          unauthorized: "Please sign in again",
+          forbidden: "Not allowed for this event",
+          wrong_event: "Ticket is for a different event",
+        };
+        setError(messages[data.reason] ?? "Check-in failed");
+        return;
+      }
+
+      const checkedInAt =
+        typeof data.checked_in_at === "string"
+          ? data.checked_in_at
+          : new Date().toISOString();
+
+      startTransition(() => {
+        setRsvps((prev) =>
+          prev.map((rsvp) => ({
+            ...rsvp,
+            tickets: rsvp.tickets.map((ticket) =>
+              ticket.id === ticketId
+                ? { ...ticket, checked_in: true, checked_in_at: checkedInAt }
+                : ticket
+            ),
+          }))
+        );
+      });
+    } catch {
+      setError("Check-in failed. Try again.");
+    } finally {
+      setPendingId(null);
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -106,6 +164,12 @@ export default function RsvpList({
           ))}
         </div>
       </div>
+
+      {error && (
+        <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300 ring-1 ring-red-500/20">
+          {error}
+        </p>
+      )}
 
       {!filtered.length ? (
         <div className="rounded-xl border border-dashed border-slate-700 p-8 text-center text-sm text-slate-500">
@@ -145,29 +209,36 @@ export default function RsvpList({
                 {rsvp.tickets.map((ticket) => (
                   <div
                     key={ticket.id}
-                    className="flex items-center justify-between px-5 py-2.5"
+                    className="flex items-center justify-between gap-3 px-5 py-2.5"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
                       <span
-                        className={`h-2 w-2 rounded-full ${
+                        className={`h-2 w-2 shrink-0 rounded-full ${
                           ticket.checked_in
                             ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]"
                             : "bg-slate-600"
                         }`}
                       />
-                      <span className="text-sm text-slate-200">
+                      <span className="truncate text-sm text-slate-200">
                         {ticket.name}
                       </span>
-                      <span className="font-mono text-xs text-slate-600">
+                      <span className="hidden font-mono text-xs text-slate-600 sm:inline">
                         {ticket.confirmation_code}
                       </span>
                     </div>
                     {ticket.checked_in ? (
-                      <span className="text-xs text-emerald-400">
+                      <span className="shrink-0 text-xs text-emerald-400">
                         In · <LocalTime iso={ticket.checked_in_at} />
                       </span>
                     ) : (
-                      <span className="text-xs text-slate-600">Not arrived</span>
+                      <button
+                        type="button"
+                        disabled={pendingId === ticket.id}
+                        onClick={() => checkInTicket(ticket.id)}
+                        className="shrink-0 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {pendingId === ticket.id ? "Checking in…" : "Check in"}
+                      </button>
                     )}
                   </div>
                 ))}
