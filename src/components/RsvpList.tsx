@@ -21,13 +21,49 @@ export type RsvpListItem = {
   tickets: RsvpTicket[];
 };
 
-type StatusFilter = "all" | "in" | "out";
+type StatusFilter = "all" | "recent" | "in" | "out";
+
+const RECENT_WINDOW_MS = 30 * 60 * 1000; // last 30 minutes
 
 const FILTERS: Array<{ key: StatusFilter; label: string }> = [
   { key: "all", label: "All" },
+  { key: "recent", label: "Recently checked in" },
   { key: "in", label: "Checked in" },
   { key: "out", label: "Not arrived" },
 ];
+
+type FlatTicket = RsvpTicket & {
+  rsvpId: string;
+  lead_name: string;
+  email?: string | null;
+  inviteLabel: string;
+};
+
+function checkedInAtMs(ticket: RsvpTicket) {
+  if (!ticket.checked_in_at) return 0;
+  const ms = new Date(ticket.checked_in_at).getTime();
+  return Number.isNaN(ms) ? 0 : ms;
+}
+
+function ticketMatchesQuery(
+  query: string,
+  lead: string,
+  invite: string,
+  tickets: RsvpTicket[]
+) {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const guestMatch = tickets.some(
+    (t) =>
+      t.name.toLowerCase().includes(q) ||
+      t.confirmation_code.toLowerCase().includes(q)
+  );
+  return (
+    lead.toLowerCase().includes(q) ||
+    invite.toLowerCase().includes(q) ||
+    guestMatch
+  );
+}
 
 export default function RsvpList({
   eventId,
@@ -46,42 +82,73 @@ export default function RsvpList({
   const [, startTransition] = useTransition();
 
   const allTickets = rsvps.flatMap((r) => r.tickets ?? []);
-  const checkedInCount = allTickets.filter((t) => t.checked_in).length;
-  const notArrivedCount = allTickets.length - checkedInCount;
+  const checkedInTickets = allTickets.filter((t) => t.checked_in);
+  const recentCutoff = Date.now() - RECENT_WINDOW_MS;
+  const recentCount = checkedInTickets.filter(
+    (t) => checkedInAtMs(t) >= recentCutoff
+  ).length;
+  const notArrivedCount = allTickets.length - checkedInTickets.length;
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+  const showArrivalOrder =
+    statusFilter === "in" || statusFilter === "recent";
+
+  const arrivalTickets = useMemo(() => {
+    if (!showArrivalOrder) return [] as FlatTicket[];
+
+    const cutoff =
+      statusFilter === "recent" ? Date.now() - RECENT_WINDOW_MS : 0;
+
+    const flat: FlatTicket[] = [];
+    for (const rsvp of rsvps) {
+      const inviteLabel = rsvp.invites?.label ?? rsvp.invites?.slug ?? "—";
+      for (const ticket of rsvp.tickets ?? []) {
+        if (!ticket.checked_in) continue;
+        if (statusFilter === "recent" && checkedInAtMs(ticket) < cutoff) {
+          continue;
+        }
+        flat.push({
+          ...ticket,
+          rsvpId: rsvp.id,
+          lead_name: rsvp.lead_name,
+          email: rsvp.email,
+          inviteLabel,
+        });
+      }
+    }
+
+    flat.sort((a, b) => checkedInAtMs(b) - checkedInAtMs(a));
+
+    return flat.filter((ticket) =>
+      ticketMatchesQuery(query, ticket.lead_name, ticket.inviteLabel, [ticket])
+    );
+  }, [rsvps, statusFilter, query, showArrivalOrder]);
+
+  const groupedRsvps = useMemo(() => {
+    if (showArrivalOrder) return [] as RsvpListItem[];
 
     return rsvps
       .map((rsvp) => {
         const tickets = (rsvp.tickets ?? []).filter((ticket) => {
-          if (statusFilter === "in" && !ticket.checked_in) return false;
-          if (statusFilter === "out" && ticket.checked_in) return false;
+          if (statusFilter === "out") return !ticket.checked_in;
           return true;
         });
         return { ...rsvp, tickets };
       })
       .filter((rsvp) => {
         if (!rsvp.tickets.length) return false;
-        if (!q) return true;
-        const invite = (
-          rsvp.invites?.label ??
-          rsvp.invites?.slug ??
-          ""
-        ).toLowerCase();
-        const lead = rsvp.lead_name.toLowerCase();
-        const guestMatch = rsvp.tickets.some(
-          (t) =>
-            t.name.toLowerCase().includes(q) ||
-            t.confirmation_code.toLowerCase().includes(q)
+        return ticketMatchesQuery(
+          query,
+          rsvp.lead_name,
+          rsvp.invites?.label ?? rsvp.invites?.slug ?? "",
+          rsvp.tickets
         );
-        return lead.includes(q) || invite.includes(q) || guestMatch;
       });
-  }, [rsvps, statusFilter, query]);
+  }, [rsvps, statusFilter, query, showArrivalOrder]);
 
   const counts: Record<StatusFilter, number> = {
     all: allTickets.length,
-    in: checkedInCount,
+    recent: recentCount,
+    in: checkedInTickets.length,
     out: notArrivedCount,
   };
 
@@ -133,6 +200,29 @@ export default function RsvpList({
     }
   }
 
+  function filterButtonClass(key: StatusFilter, active: boolean) {
+    if (!active) {
+      return "bg-slate-800 text-slate-400 ring-1 ring-slate-700 hover:bg-slate-700";
+    }
+    if (key === "recent") return "bg-sky-600 text-white";
+    if (key === "in") return "bg-emerald-600 text-white";
+    if (key === "out") return "bg-amber-600 text-white";
+    return "bg-indigo-600 text-white";
+  }
+
+  const emptyMessage =
+    statusFilter === "recent"
+      ? "No check-ins in the last 30 minutes."
+      : statusFilter === "in"
+        ? "No checked-in guests yet."
+        : statusFilter === "out"
+          ? "Everyone on the list has checked in."
+          : "No RSVPs match your search.";
+
+  const listEmpty = showArrivalOrder
+    ? arrivalTickets.length === 0
+    : groupedRsvps.length === 0;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -149,15 +239,10 @@ export default function RsvpList({
               key={f.key}
               type="button"
               onClick={() => setStatusFilter(f.key)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${filterButtonClass(
+                f.key,
                 statusFilter === f.key
-                  ? f.key === "in"
-                    ? "bg-emerald-600 text-white"
-                    : f.key === "out"
-                      ? "bg-amber-600 text-white"
-                      : "bg-indigo-600 text-white"
-                  : "bg-slate-800 text-slate-400 ring-1 ring-slate-700 hover:bg-slate-700"
-              }`}
+              )}`}
             >
               {f.label} ({counts[f.key]})
             </button>
@@ -165,23 +250,57 @@ export default function RsvpList({
         </div>
       </div>
 
+      {showArrivalOrder && (
+        <p className="text-xs text-slate-500">
+          {statusFilter === "recent"
+            ? "Latest arrivals from the last 30 minutes — newest first."
+            : "All checked-in guests — newest arrival first."}
+        </p>
+      )}
+
       {error && (
         <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300 ring-1 ring-red-500/20">
           {error}
         </p>
       )}
 
-      {!filtered.length ? (
+      {listEmpty ? (
         <div className="rounded-xl border border-dashed border-slate-700 p-8 text-center text-sm text-slate-500">
-          {statusFilter === "in"
-            ? "No checked-in guests yet."
-            : statusFilter === "out"
-              ? "Everyone on the list has checked in."
-              : "No RSVPs match your search."}
+          {emptyMessage}
+        </div>
+      ) : showArrivalOrder ? (
+        <div className="overflow-hidden rounded-xl bg-slate-900 ring-1 ring-slate-800">
+          <div className="divide-y divide-slate-800/50">
+            {arrivalTickets.map((ticket, index) => (
+              <div
+                key={ticket.id}
+                className="flex items-center justify-between gap-3 px-5 py-3"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="w-6 shrink-0 text-xs tabular-nums text-slate-600">
+                    {index + 1}
+                  </span>
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]" />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-slate-100">
+                      {ticket.name}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">
+                      {ticket.inviteLabel}
+                      {showEmail && ticket.email ? ` · ${ticket.email}` : ""}
+                    </p>
+                  </div>
+                </div>
+                <span className="shrink-0 text-xs text-emerald-400">
+                  In · <LocalTime iso={ticket.checked_in_at} />
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
-          {filtered.map((rsvp) => (
+          {groupedRsvps.map((rsvp) => (
             <div
               key={rsvp.id}
               className="overflow-hidden rounded-xl bg-slate-900 ring-1 ring-slate-800"
